@@ -1,0 +1,59 @@
+# Dependencias
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+.next/
+out/
+build/
+dist/
+
+# Entorno — NUNCA commitear
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Supabase
+.branches
+.temp
+supabase/.temp/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Tests / cobertura
+coverage/
+playwright-report/
+test-results/
+
+# Vercel
+.vercel
+
+# Next.js
+next-env.d.ts
+*.tsbuildinfo
+
+# Certificados y llaves
+*.pem
+
+# Gestores de paquetes alternativos
+.pnpm-debug.log*
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/versions
