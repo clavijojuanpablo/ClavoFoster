@@ -152,6 +152,70 @@ describe('doble reserva', () => {
   });
 });
 
+describe('retención de cupo', () => {
+  it('una retención vencida bloquea hasta que se limpia, y después libera', async () => {
+    // Alguien escogió la hora y abandonó antes de verificar su celular.
+    const { error: eRetencion } = await admin.from('appointments').insert({
+      business_id: businessId,
+      customer_id: customerId,
+      staff_id: staffA,
+      service_id: serviceId,
+      start_at: enMinutos(1500),
+      end_at: enMinutos(1545),
+      price_cop: 30000,
+      duration_minutes: 45,
+      status: 'pending',
+      expires_at: new Date(Date.now() - 60_000).toISOString(), // venció hace un minuto
+    });
+    expect(eRetencion).toBeNull();
+
+    // Mientras no se limpie, sigue apartando el cupo.
+    const bloqueada = await crearCita({ staffId: staffA, desdeMin: 1500, duracion: 45 });
+    expect(bloqueada.error).not.toBeNull();
+
+    // La misma consulta que corre /api/cron/cleanup-holds
+    const { data: liberadas } = await admin
+      .from('appointments')
+      .delete()
+      .eq('status', 'pending')
+      .lt('expires_at', new Date().toISOString())
+      .select('id');
+    expect(liberadas?.length).toBeGreaterThan(0);
+
+    // Ahora el cupo está libre otra vez.
+    const despues = await crearCita({ staffId: staffA, desdeMin: 1500, duracion: 45 });
+    expect(despues.error).toBeNull();
+  });
+
+  it('una retención vigente NO se limpia', async () => {
+    const { data: vigente } = await admin
+      .from('appointments')
+      .insert({
+        business_id: businessId,
+        customer_id: customerId,
+        staff_id: staffB,
+        service_id: serviceId,
+        start_at: enMinutos(1700),
+        end_at: enMinutos(1745),
+        price_cop: 30000,
+        duration_minutes: 45,
+        status: 'pending',
+        expires_at: new Date(Date.now() + 10 * 60_000).toISOString(),
+      })
+      .select('id')
+      .single();
+
+    await admin
+      .from('appointments')
+      .delete()
+      .eq('status', 'pending')
+      .lt('expires_at', new Date().toISOString());
+
+    const { data } = await admin.from('appointments').select('id').eq('id', vigente!.id);
+    expect(data?.length).toBe(1);
+  });
+});
+
 describe('contabilidad', () => {
   it('una cita no puede generar dos ingresos', async () => {
     const { id } = await crearCita({ staffId: staffB, desdeMin: 900, duracion: 45 });

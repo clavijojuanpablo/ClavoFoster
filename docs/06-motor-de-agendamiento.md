@@ -52,14 +52,22 @@ Aritmética de intervalos pura. El resultado es la lista de huecos reales.
 
 ### Paso 4 — Generar cupos
 
-Para cada hueco libre, se recorre desde su inicio avanzando de a
-`slot_granularity` minutos (15 por defecto). Cada posición es candidata.
+**Un cupo es la hora en que EMPIEZA EL SERVICIO** — lo que ve y escoge el
+cliente. El buffer previo queda antes de esa hora y nunca se le muestra.
 
-Una candidata `s` es válida si el servicio **cabe completo con sus dos buffers**:
+Para un hueco libre `[a, b)`, el primer inicio posible es `a + buffer_antes`:
+antes de eso el buffer previo no cabría. De ahí en adelante se avanza de a
+`slot_granularity` minutos (15 por defecto).
+
+Un inicio `s` es válido si:
 
 ```
-buffer_antes + duración + buffer_después  ≤  (fin_del_hueco − s)
+s − buffer_antes  ≥  a          (cabe el buffer previo)
+s + duración + buffer_después  ≤  b     (cabe el servicio y el buffer posterior)
 ```
+
+Con buffers en cero —el caso de la mayoría de barberías— esto se reduce a que
+el servicio quepa entre `a` y `b`.
 
 ### Paso 5 — Filtros finales
 

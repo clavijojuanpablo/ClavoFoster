@@ -24,18 +24,18 @@ quien la hizo.
 
 | Épica | Tareas | Hechas | Estado |
 |---|---|---|---|
-| A. Fundación técnica | 6 | 3 | En curso |
+| A. Fundación técnica | 6 | 5 | En curso |
 | B. Negocio y onboarding | 5 | 0 | Pendiente |
 | C. Servicios | 3 | 0 | Pendiente |
 | D. Trabajadores y horarios | 5 | 0 | Pendiente |
-| E. Motor de agendamiento | 5 | 0 | Pendiente |
+| E. Motor de agendamiento | 5 | 5 | **Hecho** |
 | F. Reserva pública | 6 | 0 | Pendiente |
 | G. Panel y calendario | 6 | 0 | Pendiente |
 | H. Contabilidad | 5 | 0 | Pendiente |
 | I. Notificaciones | 5 | 0 | Pendiente |
 | J. Suscripciones | 6 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **55** | **3** | |
+| **Total MVP** | **55** | **10** | |
 
 ## Orden de ejecución
 
@@ -69,8 +69,8 @@ una demo por consola que ya convence a un dueño de barbería.
 | A1 | Proyecto Next.js 16 + TypeScript estricto + Tailwind + shadcn/ui | M | **Hecho** |
 | A2 | Proyecto Supabase (en la nube, enlazado) y migraciones versionadas | M | **Hecho** |
 | A3 | Esquema base y políticas RLS de `07-modelo-de-datos.md` | M | **Hecho** |
-| A4 | Resolución de tenant por slug y por sesión | M | Pendiente |
-| A5 | Autenticación de dueño y trabajador (email + contraseña) | M | Pendiente |
+| A4 | Resolución de tenant por slug y por sesión | M | **Hecho** |
+| A5 | Autenticación de dueño y trabajador (email + contraseña) | M | **Hecho** |
 | A6 | Despliegue en Vercel con entornos de desarrollo y producción | M | Pendiente |
 
 **A3 — Esquema base y RLS.** Criterios de aceptación:
@@ -170,11 +170,11 @@ Criterios:
 
 | ID | Tarea | Pri | Estado |
 |---|---|---|---|
-| E1 | Cálculo de intervalos libres (horario − citas − bloqueos) | M | Pendiente |
-| E2 | Generación de cupos con paso configurable y buffers | M | Pendiente |
-| E3 | Reglas: anticipación mínima, ventana máxima, granularidad | M | Pendiente |
-| E4 | Restricción anti-solapamiento en base de datos (`EXCLUDE`) | M | Pendiente |
-| E5 | Retención temporal del cupo mientras el cliente confirma | M | Pendiente |
+| E1 | Cálculo de intervalos libres (horario − citas − bloqueos) | M | **Hecho** |
+| E2 | Generación de cupos con paso configurable y buffers | M | **Hecho** |
+| E3 | Reglas: anticipación mínima, ventana máxima, granularidad | M | **Hecho** |
+| E4 | Restricción anti-solapamiento en base de datos (`EXCLUDE`) | M | **Hecho** |
+| E5 | Retención temporal del cupo mientras el cliente confirma | M | **Hecho** |
 
 **E1 y E2 — Criterios de aceptación.** Con pruebas unitarias que cubran:
 - **El caso del usuario:** corte de 60 min a las 12:00 y barba de 30 min a las

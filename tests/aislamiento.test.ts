@@ -217,6 +217,26 @@ describe('aislamiento entre negocios', () => {
     expect(data?.name).toBe('Test beta');
   });
 
+  // Así consulta el panel: SIN filtro de negocio, confiando en que RLS ya
+  // recortó. Si esta prueba fallara, el panel mostraría datos de otro negocio.
+  it('una consulta sin filtro devuelve solo lo del negocio de la sesión', async () => {
+    const { data } = await comoA.from('appointments').select('id, business_id');
+
+    expect(data?.length).toBeGreaterThan(0);
+    expect(data?.every((c) => c.business_id === negocioA.businessId)).toBe(true);
+  });
+
+  // El criterio de la tarea A4: pedir explícitamente el negocio de otro no
+  // sirve de nada. El business_id del navegador es, a lo sumo, una sugerencia.
+  it('pedir explícitamente el business_id de B no da acceso', async () => {
+    const { data } = await comoA
+      .from('appointments')
+      .select('id')
+      .eq('business_id', negocioB.businessId);
+
+    expect(data).toEqual([]);
+  });
+
   it('A no ve la membresía de B', async () => {
     const { data } = await comoA.from('memberships').select('id, user_id');
     expect(data?.every((m) => m.user_id === negocioA.userId)).toBe(true);

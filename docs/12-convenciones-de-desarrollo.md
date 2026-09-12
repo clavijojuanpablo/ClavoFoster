@@ -42,6 +42,11 @@ en producción viven las agendas y los teléfonos de clientes de negocios reales
 >   dashboard.
 > - **El estado es compartido.** Si dos personas trabajan al tiempo, se pisan los
 >   datos.
+> - **Las pruebas pueden fallar por límite de peticiones.** Crean usuarios reales
+>   contra Supabase Auth, que tiene un tope de intentos por hora. Si varias
+>   corridas seguidas —o muchos ingresos manuales en el navegador— lo agotan, el
+>   montaje falla y las pruebas quedan saltadas. **No es un bug del código:**
+>   esperar unos minutos y volver a correr. Contra Supabase local no pasa.
 > - **No se puede trabajar sin conexión.**
 > - **Cada cambio de esquema es un `db:push`**, no un reset instantáneo.
 >
