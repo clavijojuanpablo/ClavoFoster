@@ -127,6 +127,7 @@ Detalle completo, incluida la definición de terminado:
 | `docs/11-roadmap.md` | Fases y qué queda fuera del MVP |
 | `docs/12-convenciones-de-desarrollo.md` | Cómo se trabaja en este repositorio |
 | `docs/13-contratos-de-api.md` | Firma de cada endpoint y Server Action |
+| `docs/14-estado-actual.md` | **Dónde vamos y cómo retomar. Empieza acá.** |
 | `docs/adr/` | Decisiones de arquitectura y por qué se tomaron |
 
 ## Advertencias para quien escriba código aquí

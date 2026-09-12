@@ -13,6 +13,10 @@ Fase de definición. Todavía no hay código de aplicación.
 
 ## Documentación
 
+Si vuelves al proyecto después de un tiempo, empieza por
+[`docs/14-estado-actual.md`](./docs/14-estado-actual.md): dice en qué vamos y
+cómo levantar todo.
+
 Toda la definición del producto vive en [`docs/`](./docs), numerada para leerse
 en orden. Empieza por [`docs/00-vision-y-negocio.md`](./docs/00-vision-y-negocio.md).
 

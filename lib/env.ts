@@ -27,8 +27,9 @@ const publicParsed = publicSchema.safeParse({
 if (!publicParsed.success) {
   throw new Error(
     `Variables de entorno públicas inválidas o faltantes:\n${z.prettifyError(publicParsed.error)}\n\n` +
-      'Copia .env.example a .env.local y llena los valores. ' +
-      'Los de Supabase los imprime `npm run db:start`.',
+      'En local: copia .env.example a .env.local y llena los valores. ' +
+      'En Vercel: configúralas en Project Settings → Environment Variables. ' +
+      'Los valores de Supabase están en su dashboard, Project Settings → API Keys.',
   );
 }
 
