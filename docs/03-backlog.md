@@ -24,7 +24,7 @@ quien la hizo.
 
 | Épica | Tareas | Hechas | Estado |
 |---|---|---|---|
-| A. Fundación técnica | 6 | 5 | En curso |
+| A. Fundación técnica | 6 | 6 | **Hecho** |
 | B. Negocio y onboarding | 5 | 0 | Pendiente |
 | C. Servicios | 3 | 0 | Pendiente |
 | D. Trabajadores y horarios | 5 | 0 | Pendiente |
@@ -35,7 +35,7 @@ quien la hizo.
 | I. Notificaciones | 5 | 0 | Pendiente |
 | J. Suscripciones | 6 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **55** | **10** | |
+| **Total MVP** | **55** | **11** | |
 
 ## Orden de ejecución
 
@@ -71,7 +71,7 @@ una demo por consola que ya convence a un dueño de barbería.
 | A3 | Esquema base y políticas RLS de `07-modelo-de-datos.md` | M | **Hecho** |
 | A4 | Resolución de tenant por slug y por sesión | M | **Hecho** |
 | A5 | Autenticación de dueño y trabajador (email + contraseña) | M | **Hecho** |
-| A6 | Despliegue en Vercel con entornos de desarrollo y producción | M | Pendiente |
+| A6 | Despliegue en Vercel con entornos de desarrollo y producción | M | **Hecho** |
 
 **A3 — Esquema base y RLS.** Criterios de aceptación:
 - Toda tabla de negocio tiene `tenant_id` y RLS activa.
@@ -86,6 +86,27 @@ una demo por consola que ya convence a un dueño de barbería.
 - Desde el panel, se resuelve por la sesión del usuario.
 - Un `tenant_id` enviado por el cliente se ignora siempre. Hay una prueba que lo
   verifica.
+
+**A6 — Despliegue en Vercel.** Cerrada el 2026-09-11. Vercel está conectado al
+repositorio: cada `push` a `main` despliega a producción y cada rama genera un
+despliegue de vista previa. Lo verificado en vivo:
+
+- La página pública `/[slug]` sirve datos reales desde Supabase.
+- `/panel` sin sesión responde `307` hacia `/login`. El `proxy.ts` corre.
+- Un slug inexistente responde `404`, no una página en blanco.
+- `/api/cron/cleanup-holds` sin cabecera responde `401`, no `500` — es decir,
+  `CRON_SECRET` sí quedó configurado en Vercel.
+
+**Lo que quedó aplazado a propósito, y no bloquea ninguna épica:**
+
+- **No hay proyecto de Supabase de producción todavía.** El despliegue apunta al
+  proyecto de *desarrollo*. Sirve para mostrar el producto, no para negocios
+  reales. Crear el proyecto de producción y repuntar Vercel es requisito **antes
+  de la primera venta**, no antes de la épica B. Ver la épica J.
+- **Nadie llama a `/api/cron/cleanup-holds` todavía.** El endpoint funciona,
+  pero no hay programador. Se resuelve con `pg_cron` en Supabase cuando la
+  épica F empiece a crear retenciones — el plan gratuito de Vercel solo permite
+  una ejecución diaria, que para retenciones de 10 minutos no sirve.
 
 ---
 

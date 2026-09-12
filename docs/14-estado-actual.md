@@ -38,11 +38,11 @@ npm run typecheck
 
 ## Avance
 
-**10 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
+**11 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
 
 | Épica | Estado |
 |---|---|
-| A — Fundación técnica | 5 de 6. Falta solo A6 (despliegue en Vercel), aplazado a propósito |
+| **A — Fundación técnica** | **Completa** |
 | **E — Motor de agendamiento** | **Completa** |
 | B, C, D, F, G, H, I, J, K | Sin empezar |
 
@@ -51,20 +51,27 @@ ya no necesitan tocar la base salvo ajustes menores.
 
 ### Lo que ya funciona
 
-- `/[slug]` — página pública del negocio, sin sesión
+Todo esto está desplegado y andando en
+**https://clavo-foster-5lt7.vercel.app**, no solo en local:
+
+- `/[slug]` — página pública del negocio, sin sesión. Ej. `/barberia-demo`
 - `/login` — ingreso con correo y contraseña
 - `/panel` — panel protegido, con las próximas citas
-- `/api/cron/cleanup-holds` — libera retenciones vencidas
+- `/api/cron/cleanup-holds` — libera retenciones vencidas (nadie lo llama aún)
 - `lib/scheduling/` — el motor de cupos, con 28 pruebas
+
+Comprobación: 73 pruebas en verde, `typecheck` y `lint` limpios.
 
 ### Qué sigue
 
-**Épica F (reserva pública)** es lo que más rinde: conecta el motor con la base
-y convierte `/[slug]` en una página donde de verdad se reserva. Es lo primero
-que se le puede mostrar a un dueño de barbería.
+**Épica B (negocio y onboarding).** Es el siguiente paso natural ahora que la
+fundación está cerrada: hoy los dos negocios de la base existen **solo porque
+los creó el seed**. Sin B no hay forma de que un dueño real entre al producto,
+y C, D y F construyen encima de lo que B crea.
 
-La alternativa es la **épica D** (horarios y bloqueos desde el panel), que hoy
-solo existen porque los creó el seed.
+Después, en orden: C (servicios) → D (trabajadores y horarios) → F (reserva
+pública), que es donde el motor de cupos por fin se conecta con la base y
+`/[slug]` deja de ser una vitrina.
 
 ## Entorno
 
@@ -72,6 +79,7 @@ solo existen porque los creó el seed.
 |---|---|
 | Proyecto Supabase (desarrollo) | `pubpfmsgwnyuhxleaysr` |
 | Repositorio | `github.com/clavijojuanpablo/ClavoFoster` |
+| Despliegue (producción) | `https://clavo-foster-5lt7.vercel.app` |
 | Negocio de demostración | `/barberia-demo` |
 | Usuario de demostración | `demo@barberia.test` / `demo12345` |
 
@@ -83,13 +91,14 @@ sacan del dashboard de Supabase: Project Settings → API Keys.
 
 ## Despliegue
 
-Vercel está conectado al repositorio: cada `push` a `main` dispara un
-despliegue.
+**En vivo: https://clavo-foster-5lt7.vercel.app** — proyecto `clavo-foster` en
+Vercel, conectado al repositorio. Cada `push` a `main` despliega a producción y
+cada rama abre un despliegue de vista previa.
 
 **El build FALLA si faltan variables de entorno.** Es a propósito —
 `lib/env.ts` valida al arrancar, para que un secreto faltante se descubra en el
-despliegue y no cuando un cliente intente reservar. Hay que configurarlas en
-Project Settings → Environment Variables:
+despliegue y no cuando un cliente intente reservar. Se configuran en Project
+Settings → Environment Variables:
 
 | Variable | De dónde sale |
 |---|---|
@@ -99,18 +108,25 @@ Project Settings → Environment Variables:
 | `NEXT_PUBLIC_APP_URL` | La URL que asigne Vercel, no `localhost` |
 | `CRON_SECRET` | `openssl rand -hex 32`, o el mismo de `.env.local` |
 
-> **Este primer despliegue apunta al proyecto de DESARROLLO de Supabase.**
-> Sirve para mostrar el producto, no para negocios reales. Antes de la primera
-> venta hay que crear un proyecto de producción aparte y apuntar Vercel allá.
-> Ver `12-convenciones-de-desarrollo.md`.
+> **Márcalas en los tres entornos (Production, Preview y Development), no solo
+> en Production.** Si solo están en Production, cualquier rama que no sea `main`
+> revienta el build por `lib/env.ts` — y la definición de terminado exige probar
+> a mano en el entorno de vista previa antes de fusionar. Si un despliegue de
+> rama sale en rojo con un error de variables faltantes, es esto.
+
+**Este despliegue apunta al proyecto de DESARROLLO de Supabase.** Sirve para
+mostrar el producto, no para negocios reales. Antes de la primera venta hay que
+crear un proyecto de producción aparte y apuntar Vercel allá. Ver
+`12-convenciones-de-desarrollo.md`.
 
 **Trabajos programados: todavía no hay ninguno configurado.**
-`/api/cron/cleanup-holds` existe y funciona, pero nadie lo llama solo. Ojo con
-esto al configurarlo: el plan gratuito de Vercel solo permite tareas
-programadas **una vez al día**, y una limpieza diaria de retenciones de 10
-minutos no sirve de nada. Lo correcto es `pg_cron` dentro de Supabase, como
-dice `04-stack-tecnologico.md`. No es urgente: las retenciones todavía no se
-crean, eso llega con la épica F.
+`/api/cron/cleanup-holds` existe y funciona —sin cabecera responde `401`, así
+que `CRON_SECRET` sí quedó puesto— pero nadie lo llama solo. Ojo con esto al
+configurarlo: el plan gratuito de Vercel solo permite tareas programadas **una
+vez al día**, y una limpieza diaria de retenciones de 10 minutos no sirve de
+nada. Lo correcto es `pg_cron` dentro de Supabase, como dice
+`04-stack-tecnologico.md`. No es urgente: las retenciones todavía no se crean,
+eso llega con la épica F.
 
 ## Decisiones que se tomaron sobre la marcha
 
@@ -147,6 +163,7 @@ operación y no valía la pena arrastrar una librería.
 | `npm run dev` dice que el puerto está ocupado | Quedó un servidor anterior vivo. `taskkill /PID <pid> /F` |
 | Aparece un bloque raro al final de `CLAUDE.md` | Lo escribe `next dev` solo. Se vuelve a poner si se borra |
 | Un negocio no aparece en su página pública | `is_published` en falso o `status` distinto de `active`. Es RLS haciendo su trabajo |
+| El despliegue de una rama sale rojo por variables faltantes | Las variables están solo en Production. Marcarlas también en Preview |
 
 ## Cómo mantener esto vivo
 
