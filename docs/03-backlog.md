@@ -114,7 +114,7 @@ despliegue de vista previa. Lo verificado en vivo:
 
 | ID | Tarea | Pri | Estado |
 |---|---|---|---|
-| B1 | Registro de negocio (email, contraseña, nombre, celular) | M | En curso |
+| B1 | Registro de negocio (email, contraseña, nombre, celular) | M | En revisión |
 | B2 | Asistente de onboarding por pasos, salteable y retomable | M | Pendiente |
 | B3 | Selección de slug público con validación de disponibilidad | M | Pendiente |
 | B4 | Perfil del negocio: dirección con mapa, categoría, fotos, zona horaria | M | Pendiente |
