@@ -108,6 +108,8 @@ describe('create_business', () => {
     });
 
     expect(error).not.toBeNull();
+    // La interfaz decide qué hacer por el hint, no por el texto.
+    expect(error?.hint).toBe('ya_tiene_negocio');
   });
 
   it('rechaza un slug ya tomado', async () => {
@@ -118,6 +120,82 @@ describe('create_business', () => {
   it('acepta un slug libre y normaliza mayúsculas', async () => {
     const { data } = await comoUsuario.rpc('slug_disponible', { p_slug: `LIBRE-${marca}` });
     expect(data).toBe(true);
+  });
+
+  describe('con una segunda cuenta, todavía sin negocio', () => {
+    // create_business se puede llamar por RPC sin pasar por los formularios.
+    // Estas pruebas verifican que la base, y no solo Zod, cierra cada hueco.
+    let otroUserId: string;
+    let comoOtro: SupabaseClient;
+
+    beforeAll(async () => {
+      const email = `alta-otro-${marca}@ejemplo.test`;
+      const { data, error } = await admin.auth.admin.createUser({
+        email,
+        password: PASSWORD,
+        email_confirm: true,
+      });
+      if (error) throw new Error(error.message);
+      otroUserId = data.user.id;
+
+      comoOtro = createClient(url, publishableKey, { auth: { persistSession: false } });
+      const { error: eLogin } = await comoOtro.auth.signInWithPassword({ email, password: PASSWORD });
+      if (eLogin) throw new Error(eLogin.message);
+    });
+
+    afterAll(async () => {
+      // Por si alguna prueba falla dejando un negocio creado.
+      const { data } = await admin
+        .from('memberships')
+        .select('business_id')
+        .eq('user_id', otroUserId);
+      for (const m of data ?? []) {
+        await admin.from('businesses').delete().eq('id', m.business_id);
+      }
+      if (otroUserId) await admin.auth.admin.deleteUser(otroUserId);
+    });
+
+    it('no puede quedarse con el slug de otro negocio', async () => {
+      const { error } = await comoOtro.rpc('create_business', {
+        p_name: 'Copia',
+        p_slug: `ALTA-${marca}`,
+        p_category: 'barbershop',
+      });
+
+      expect(error?.hint).toBe('slug_tomado');
+    });
+
+    it('no puede usar un slug que choca con una ruta de la aplicación', async () => {
+      for (const reservado of ['registro', 'bienvenida', 'auth']) {
+        const { error } = await comoOtro.rpc('create_business', {
+          p_name: 'Ruta',
+          p_slug: reservado,
+          p_category: 'barbershop',
+        });
+
+        expect(error, reservado).not.toBeNull();
+      }
+    });
+
+    it('no puede inventar una categoría sin plantillas', async () => {
+      const { error } = await comoOtro.rpc('create_business', {
+        p_name: 'Veterinaria',
+        p_slug: `vet-${marca}`,
+        p_category: 'veterinaria',
+      });
+
+      expect(error).not.toBeNull();
+    });
+
+    it('no puede crear un negocio sin nombre', async () => {
+      const { error } = await comoOtro.rpc('create_business', {
+        p_name: '   ',
+        p_slug: `sin-nombre-${marca}`,
+        p_category: 'barbershop',
+      });
+
+      expect(error).not.toBeNull();
+    });
   });
 
   it('sin sesión no se puede crear un negocio', async () => {

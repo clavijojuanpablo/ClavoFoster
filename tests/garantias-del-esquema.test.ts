@@ -266,15 +266,15 @@ describe('validaciones de datos', () => {
   it('rechaza un slug con mayúsculas', async () => {
     const { error } = await admin
       .from('businesses')
-      .insert({ slug: `MAYUS-${marca}`, name: 'X', category: 'barbershop' });
-    expect(error).not.toBeNull();
+      .insert({ slug: `MAYUS-${marca}`, name: 'Negocio', category: 'barbershop' });
+    expect(error?.message).toContain('slug_formato');
   });
 
   it('rechaza un slug reservado', async () => {
     const { error } = await admin
       .from('businesses')
-      .insert({ slug: 'admin', name: 'X', category: 'barbershop' });
-    expect(error).not.toBeNull();
+      .insert({ slug: 'admin', name: 'Negocio', category: 'barbershop' });
+    expect(error?.message).toContain('slug_no_reservado');
   });
 
   it('rechaza un teléfono que no está en formato internacional', async () => {

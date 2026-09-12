@@ -114,11 +114,18 @@ despliegue de vista previa. Lo verificado en vivo:
 
 | ID | Tarea | Pri | Estado |
 |---|---|---|---|
-| B1 | Registro de negocio (email, contraseña, nombre, celular) | M | Pendiente |
+| B1 | Registro de negocio (email, contraseña, nombre, celular) | M | En curso |
 | B2 | Asistente de onboarding por pasos, salteable y retomable | M | Pendiente |
 | B3 | Selección de slug público con validación de disponibilidad | M | Pendiente |
 | B4 | Perfil del negocio: dirección con mapa, categoría, fotos, zona horaria | M | Pendiente |
 | B5 | Plantillas de servicios precargadas por tipo de negocio | S | Pendiente |
+
+**B1 — Registro.** Dos pantallas, no una: `/registro` crea la cuenta y
+`/bienvenida` crea el negocio. La razón es técnica: si Supabase exige confirmar
+el correo, al registrarse todavía no hay sesión y `create_business()` necesita
+`auth.uid()`. El nombre del negocio y el celular viajan en los metadatos del
+usuario y prellenan `/bienvenida`, así que el dueño no escribe nada dos veces.
+Funciona con la confirmación de correo encendida o apagada.
 
 **B4 — Perfil del negocio.** La dirección con coordenadas, la categoría y las
 fotos **no se usan en el MVP**: alimentan el directorio futuro. Se piden ahora

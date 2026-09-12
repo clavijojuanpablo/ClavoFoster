@@ -542,6 +542,23 @@ Tres decisiones que importan:
   único punto de entrada auditable, en vez de repartir la llave maestra por el
   flujo de onboarding.
 
+**Errores esperados con `HINT` fijo.** La interfaz los reconoce por el hint, no
+por el texto del mensaje:
+
+| Hint | Cuándo |
+|---|---|
+| `sin_sesion` | Llamada sin usuario autenticado |
+| `ya_tiene_negocio` | La cuenta ya es dueña de un negocio |
+| `slug_tomado` | El slug existe, incluida la carrera entre dos altas simultáneas |
+
+**Como se puede llamar por RPC saltándose la aplicación, la base repite las
+validaciones de Zod** con restricciones sobre `businesses`: `categoria_valida`
+(solo las cinco categorías con plantillas), `nombre_valido` (2 a 80
+caracteres) y `slug_no_reservado`, que incluye **toda ruta de primer nivel de la
+aplicación** (`registro`, `bienvenida`, `auth`...). Una ruta nueva de primer
+nivel se agrega ahí y en `lib/validation/negocio.ts`; si no, un negocio puede
+quedarse con ese slug y su página pública queda tapada por la ruta.
+
 ### slug_disponible()
 
 Valida el slug en vivo durante el onboarding sin exponer la tabla `businesses` a
