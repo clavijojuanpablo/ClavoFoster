@@ -25,7 +25,7 @@ quien la hizo.
 | Épica | Tareas | Hechas | Estado |
 |---|---|---|---|
 | A. Fundación técnica | 6 | 6 | **Hecho** |
-| B. Negocio y onboarding | 5 | 0 | Pendiente |
+| B. Negocio y onboarding | 5 | 3 | En curso |
 | C. Servicios | 3 | 0 | Pendiente |
 | D. Trabajadores y horarios | 5 | 0 | Pendiente |
 | E. Motor de agendamiento | 5 | 5 | **Hecho** |
@@ -35,7 +35,7 @@ quien la hizo.
 | I. Notificaciones | 5 | 0 | Pendiente |
 | J. Suscripciones | 6 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **55** | **11** | |
+| **Total MVP** | **55** | **14** | |
 
 ## Orden de ejecución
 
@@ -114,10 +114,10 @@ despliegue de vista previa. Lo verificado en vivo:
 
 | ID | Tarea | Pri | Estado |
 |---|---|---|---|
-| B1 | Registro de negocio (email, contraseña, nombre, celular) | M | En revisión |
+| B1 | Registro de negocio (email, contraseña, nombre, celular) | M | **Hecho** |
 | B2 | Asistente de onboarding por pasos, salteable y retomable | M | Pendiente |
-| B3 | Selección de slug público con validación de disponibilidad | M | En revisión |
-| B4 | Perfil del negocio: dirección con mapa, categoría, fotos, zona horaria | M | En revisión |
+| B3 | Selección de slug público con validación de disponibilidad | M | **Hecho** |
+| B4 | Perfil del negocio: dirección con mapa, categoría, fotos, zona horaria | M | **Hecho** |
 | B5 | Plantillas de servicios precargadas por tipo de negocio | S | Pendiente |
 
 **B1 — Registro.** Dos pantallas, no una: `/registro` crea la cuenta y
