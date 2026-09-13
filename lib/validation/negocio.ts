@@ -54,6 +54,19 @@ export function sugerirSlug(nombre: string): string {
     .replace(/-+$/g, '');
 }
 
+/**
+ * Alternativas para cuando el slug ya está tomado: "barberia-juan" →
+ * "barberia-juan-2", "barberia-juan-3"... Recorta la base si hace falta para no
+ * pasar del máximo.
+ */
+export function alternativasDeSlug(slug: string, cantidad = 4): string[] {
+  return Array.from({ length: cantidad }, (_, i) => {
+    const sufijo = `-${i + 2}`;
+    const base = slug.slice(0, SLUG_MAX - sufijo.length).replace(/-+$/g, '');
+    return `${base}${sufijo}`;
+  });
+}
+
 export const esquemaSlug = z
   .string()
   .trim()

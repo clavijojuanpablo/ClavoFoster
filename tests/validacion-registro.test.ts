@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  alternativasDeSlug,
   esquemaAltaNegocio,
   esquemaRegistro,
   esquemaSlug,
@@ -50,6 +51,24 @@ describe('sugerirSlug', () => {
     expect(slug.length).toBeLessThanOrEqual(50);
     expect(slug.endsWith('-')).toBe(false);
     expect(esquemaSlug.safeParse(slug).success).toBe(true);
+  });
+});
+
+describe('alternativasDeSlug', () => {
+  it('numera desde 2', () => {
+    expect(alternativasDeSlug('barberia-juan', 3)).toEqual([
+      'barberia-juan-2',
+      'barberia-juan-3',
+      'barberia-juan-4',
+    ]);
+  });
+
+  it('recorta la base para no pasar del máximo y sigue siendo un slug válido', () => {
+    const largo = `${'a'.repeat(48)}-b`; // 50, justo en el máximo
+    for (const alternativa of alternativasDeSlug(largo)) {
+      expect(alternativa.length).toBeLessThanOrEqual(50);
+      expect(esquemaSlug.safeParse(alternativa).success).toBe(true);
+    }
   });
 });
 

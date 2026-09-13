@@ -116,7 +116,7 @@ despliegue de vista previa. Lo verificado en vivo:
 |---|---|---|---|
 | B1 | Registro de negocio (email, contraseña, nombre, celular) | M | En revisión |
 | B2 | Asistente de onboarding por pasos, salteable y retomable | M | Pendiente |
-| B3 | Selección de slug público con validación de disponibilidad | M | Pendiente |
+| B3 | Selección de slug público con validación de disponibilidad | M | En revisión |
 | B4 | Perfil del negocio: dirección con mapa, categoría, fotos, zona horaria | M | Pendiente |
 | B5 | Plantillas de servicios precargadas por tipo de negocio | S | Pendiente |
 
@@ -126,6 +126,13 @@ el correo, al registrarse todavía no hay sesión y `create_business()` necesita
 `auth.uid()`. El nombre del negocio y el celular viajan en los metadatos del
 usuario y prellenan `/bienvenida`, así que el dueño no escribe nada dos veces.
 Funciona con la confirmación de correo encendida o apagada.
+
+**B3 — Slug público.** En `/bienvenida` el link se sugiere desde el nombre
+y se revisa en vivo 400 ms después de dejar de escribir. Si está tomado, se
+ofrece una alternativa libre (`-2`, `-3`...) con un toque. La revisión es solo
+ayuda: la garantía es el índice único al crear el negocio. **Cambiar el slug
+después del alta queda fuera a propósito**: rompe los links que el negocio ya
+compartió en Instagram y WhatsApp, y necesita redirección desde el slug viejo.
 
 **B4 — Perfil del negocio.** La dirección con coordenadas, la categoría y las
 fotos **no se usan en el MVP**: alimentan el directorio futuro. Se piden ahora

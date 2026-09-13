@@ -3,13 +3,58 @@
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
-import { erroresPorCampo, esquemaAltaNegocio } from '@/lib/validation/negocio';
+import {
+  alternativasDeSlug,
+  erroresPorCampo,
+  esquemaAltaNegocio,
+  esquemaSlug,
+} from '@/lib/validation/negocio';
 
 export type EstadoAltaNegocio = {
   error: string | null;
   campos: Record<string, string>;
   valores: Record<string, string>;
 };
+
+export type DisponibilidadSlug =
+  | { estado: 'disponible' }
+  | { estado: 'invalido'; mensaje: string }
+  | { estado: 'tomado'; sugerencia: string | null }
+  /** No se pudo revisar. La interfaz no bloquea: create_business valida al enviar. */
+  | { estado: 'desconocido' };
+
+/**
+ * Revisión en vivo del link mientras el dueño lo escribe (tarea B3).
+ *
+ * Es solo una ayuda: entre esta respuesta y el envío otro negocio puede tomar
+ * el mismo slug. La garantía la da el índice único al crear el negocio.
+ */
+export async function verificarSlug(slug: string): Promise<DisponibilidadSlug> {
+  const formato = esquemaSlug.safeParse(slug);
+  if (!formato.success) {
+    return { estado: 'invalido', mensaje: formato.error.issues[0].message };
+  }
+
+  const supabase = await createClient();
+  const { data: disponible, error } = await supabase.rpc('slug_disponible', {
+    p_slug: formato.data,
+  });
+
+  // Sin sesión la función no se puede ejecutar y llega como error: tampoco hay
+  // nada que revisar, el envío del formulario lo manda a iniciar sesión.
+  if (error) return { estado: 'desconocido' };
+  if (disponible) return { estado: 'disponible' };
+
+  // Dentro de una sola acción se puede consultar en paralelo. Desde el
+  // navegador no: Next despacha las Server Actions de a una.
+  const candidatos = alternativasDeSlug(formato.data);
+  const respuestas = await Promise.all(
+    candidatos.map((c) => supabase.rpc('slug_disponible', { p_slug: c })),
+  );
+  const libre = candidatos.find((_, i) => respuestas[i].data === true) ?? null;
+
+  return { estado: 'tomado', sugerencia: libre };
+}
 
 /**
  * Crea el negocio del usuario autenticado.

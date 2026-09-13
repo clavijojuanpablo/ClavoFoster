@@ -1,8 +1,13 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 
-import { crearNegocio, type EstadoAltaNegocio } from '@/app/(admin)/bienvenida/actions';
+import {
+  crearNegocio,
+  verificarSlug,
+  type DisponibilidadSlug,
+  type EstadoAltaNegocio,
+} from '@/app/(admin)/bienvenida/actions';
 import { AvisoError, Campo, CLASES_BOTON_PRIMARIO } from '@/components/admin/campo';
 import { CATEGORIAS, SLUG_MAX, sugerirSlug } from '@/lib/validation/negocio';
 
@@ -32,6 +37,16 @@ export function FormularioAltaNegocio({ nombreInicial, celularInicial, dominio }
   // lo edita a mano, se respeta lo que escribió.
   const [slug, setSlug] = useState(estado.valores.slug);
   const [slugEditado, setSlugEditado] = useState(false);
+  const disponibilidad = useDisponibilidadSlug(slug);
+
+  // Un error del envío manda sobre la revisión en vivo, pero solo mientras el
+  // slug siga siendo el que se envió. Si lo cambia, vuelve a mandar la revisión.
+  const errorEnvioSlug = slug === estado.valores.slug ? estado.campos.slug : undefined;
+
+  const usarSlug = (nuevo: string) => {
+    setSlugEditado(true);
+    setSlug(nuevo);
+  };
 
   return (
     <form action={accion} className="space-y-6" noValidate>
@@ -94,21 +109,24 @@ export function FormularioAltaNegocio({ nombreInicial, celularInicial, dominio }
             autoCorrect="off"
             spellCheck={false}
             value={slug}
-            onChange={(e) => {
-              setSlugEditado(true);
-              setSlug(e.target.value.toLowerCase());
-            }}
-            aria-invalid={estado.campos.slug ? true : undefined}
+            onChange={(e) => usarSlug(e.target.value.toLowerCase())}
+            aria-invalid={
+              errorEnvioSlug || disponibilidad?.estado === 'invalido' || disponibilidad?.estado === 'tomado'
+                ? true
+                : undefined
+            }
             aria-describedby="slug-ayuda"
             className="w-full min-w-0 rounded-r-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900 aria-invalid:border-red-500 dark:border-neutral-700 dark:bg-neutral-950 dark:focus:border-neutral-400"
           />
         </div>
-        <p
-          id="slug-ayuda"
-          className={`mt-1 text-xs ${estado.campos.slug ? 'text-red-600' : 'text-neutral-500'}`}
-        >
-          {estado.campos.slug ?? 'Es el que vas a poner en tu Instagram y tu WhatsApp.'}
-        </p>
+        <div id="slug-ayuda" aria-live="polite" className="mt-1 text-xs">
+          <EstadoSlug
+            slug={slug}
+            errorEnvio={errorEnvioSlug}
+            disponibilidad={disponibilidad}
+            onUsar={usarSlug}
+          />
+        </div>
       </div>
 
       <Campo
@@ -130,4 +148,85 @@ export function FormularioAltaNegocio({ nombreInicial, celularInicial, dominio }
       </button>
     </form>
   );
+}
+
+const ESPERA_REVISION_MS = 400;
+
+/**
+ * Revisa el slug en el servidor cuando el dueño deja de escribir.
+ *
+ * Devuelve null mientras no hay respuesta para el slug ACTUAL. Una respuesta
+ * que llega tarde para un slug que ya cambió se descarta: si no, "barberia"
+ * podría mostrarse como libre después de que el dueño escribió "barber".
+ */
+function useDisponibilidadSlug(slug: string): DisponibilidadSlug | null {
+  const [revision, setRevision] = useState<{ slug: string; resultado: DisponibilidadSlug } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    let vigente = true;
+
+    const temporizador = setTimeout(() => {
+      verificarSlug(slug)
+        .catch((): DisponibilidadSlug => ({ estado: 'desconocido' }))
+        .then((resultado) => {
+          if (vigente) setRevision({ slug, resultado });
+        });
+    }, ESPERA_REVISION_MS);
+
+    return () => {
+      vigente = false;
+      clearTimeout(temporizador);
+    };
+  }, [slug]);
+
+  return revision?.slug === slug ? revision.resultado : null;
+}
+
+function EstadoSlug({
+  slug,
+  errorEnvio,
+  disponibilidad,
+  onUsar,
+}: {
+  slug: string;
+  errorEnvio: string | undefined;
+  disponibilidad: DisponibilidadSlug | null;
+  onUsar: (slug: string) => void;
+}) {
+  if (errorEnvio) return <p className="text-red-600">{errorEnvio}</p>;
+
+  if (!slug) {
+    return <p className="text-neutral-500">Es el que vas a poner en tu Instagram y tu WhatsApp.</p>;
+  }
+
+  if (!disponibilidad) return <p className="text-neutral-500">Revisando si está libre…</p>;
+
+  switch (disponibilidad.estado) {
+    case 'disponible':
+      return <p className="text-green-700 dark:text-green-500">Está libre. Es tuyo si lo quieres.</p>;
+    case 'invalido':
+      return <p className="text-red-600">{disponibilidad.mensaje}</p>;
+    case 'tomado':
+      return (
+        <p className="text-red-600">
+          Ya lo tiene otro negocio.
+          {disponibilidad.sugerencia && (
+            <>
+              {' '}
+              <button
+                type="button"
+                onClick={() => onUsar(disponibilidad.sugerencia!)}
+                className="font-medium text-neutral-900 underline underline-offset-2 dark:text-neutral-100"
+              >
+                Usar {disponibilidad.sugerencia}
+              </button>
+            </>
+          )}
+        </p>
+      );
+    case 'desconocido':
+      return <p className="text-neutral-500">Es el que vas a poner en tu Instagram y tu WhatsApp.</p>;
+  }
 }

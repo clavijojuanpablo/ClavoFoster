@@ -999,6 +999,8 @@ export type Database = {
       }
       is_owner: { Args: { b_id: string }; Returns: boolean }
       slug_disponible: { Args: { p_slug: string }; Returns: boolean }
+      slug_es_reservado: { Args: { p_slug: string }; Returns: boolean }
+      slug_tiene_formato: { Args: { p_slug: string }; Returns: boolean }
     }
     Enums: {
       app_role: "owner" | "staff"

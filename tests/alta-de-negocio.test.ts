@@ -122,6 +122,24 @@ describe('create_business', () => {
     expect(data).toBe(true);
   });
 
+  // "Disponible" tiene que significar "create_business lo aceptaría". Si no, la
+  // interfaz le dice al dueño que su link está libre y después se lo rechaza.
+  it.each(['login', 'registro', 'con espacios', '-guion', 'tildé'])(
+    'no da por disponible "%s"',
+    async (slug) => {
+      const { data, error } = await comoUsuario.rpc('slug_disponible', { p_slug: slug });
+      expect(error).toBeNull();
+      expect(data).toBe(false);
+    },
+  );
+
+  it('sin sesión no se puede consultar la disponibilidad', async () => {
+    const anonimo = createClient(url, publishableKey, { auth: { persistSession: false } });
+    const { data, error } = await anonimo.rpc('slug_disponible', { p_slug: `alta-${marca}` });
+    expect(data).toBeNull();
+    expect(error).not.toBeNull();
+  });
+
   describe('con una segunda cuenta, todavía sin negocio', () => {
     // create_business se puede llamar por RPC sin pasar por los formularios.
     // Estas pruebas verifican que la base, y no solo Zod, cierra cada hueco.

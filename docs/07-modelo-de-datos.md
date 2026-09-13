@@ -556,13 +556,23 @@ validaciones de Zod** con restricciones sobre `businesses`: `categoria_valida`
 (solo las cinco categorías con plantillas), `nombre_valido` (2 a 80
 caracteres) y `slug_no_reservado`, que incluye **toda ruta de primer nivel de la
 aplicación** (`registro`, `bienvenida`, `auth`...). Una ruta nueva de primer
-nivel se agrega ahí y en `lib/validation/negocio.ts`; si no, un negocio puede
+nivel se agrega en `slug_es_reservado()` (con una migración nueva) y en
+`lib/validation/negocio.ts`; si no, un negocio puede
 quedarse con ese slug y su página pública queda tapada por la ruta.
 
 ### slug_disponible()
 
 Valida el slug en vivo durante el onboarding sin exponer la tabla `businesses` a
 consultas del navegador.
+
+**"Disponible" significa "`create_business` lo aceptaría":** libre, con formato
+válido y no reservado. Las reglas viven en `slug_tiene_formato()` y
+`slug_es_reservado()`, que usan tanto esta función como las restricciones
+`slug_formato` y `slug_no_reservado` de `businesses`, para que no puedan
+contradecirse.
+
+Solo la ejecuta el rol `authenticated`. Sin sesión serviría para enumerar los
+slugs de negocios que todavía no publicaron su página.
 
 ## Migraciones
 
