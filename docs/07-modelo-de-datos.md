@@ -101,6 +101,26 @@ palabras que chocarían con rutas de la aplicación (`api`, `admin`, `app`,
 > esquema: una comparación que se comporta diferente según la columna es
 > justamente el tipo de sorpresa que cuesta caro después.
 
+**Qué puede cambiar el dueño.** La política de RLS decide qué *fila* toca; los
+permisos por columna deciden qué *columnas*. El rol `authenticated` solo tiene
+`UPDATE` sobre los datos del perfil, la marca, la ubicación, las fotos, la zona
+horaria, las reglas de reserva e `is_published`. **`status` y `slug` quedan
+fuera**: sin esto, un dueño en prueba se ponía `status = 'active'` desde la
+consola del navegador y nunca pagaba. `status` lo cambian solo la facturación y
+el super-admin, con la llave secreta. Una columna nueva que el dueño deba
+editar necesita su `grant update` en la migración que la crea.
+
+**Ubicación, zona horaria y fotos** (tarea B4):
+
+- `latitude` y `longitude` van las dos o ninguna (`coordenadas_completas`).
+- `timezone` se valida contra `pg_timezone_names` con un trigger — no puede ser
+  un `CHECK` porque esa vista no es inmutable. Una zona inventada rompería la
+  conversión a UTC del motor de cupos. Error con hint `zona_horaria_invalida`.
+- `photos` es una lista JSON de hasta 10 **rutas** dentro del bucket público
+  `business-photos`, no URLs. Cada ruta es `<business_id>/<uuid>.jpg`; la
+  política de `storage.objects` solo deja subir, ver y borrar en la carpeta de
+  un negocio del que el usuario es dueño.
+
 ### memberships
 
 Definida en `05-arquitectura-multitenant.md`. Resuelve permisos por la pareja

@@ -997,6 +997,7 @@ export type Database = {
         }
         Returns: string
       }
+      es_dueno_de_carpeta: { Args: { p_nombre: string }; Returns: boolean }
       is_owner: { Args: { b_id: string }; Returns: boolean }
       slug_disponible: { Args: { p_slug: string }; Returns: boolean }
       slug_es_reservado: { Args: { p_slug: string }; Returns: boolean }

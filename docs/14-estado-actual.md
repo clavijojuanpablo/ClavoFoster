@@ -3,7 +3,7 @@
 > **Empieza por acá si vuelves al proyecto después de un tiempo, o si eres
 > alguien nuevo.** Este documento se actualiza al terminar cada tarea.
 >
-> Última actualización: 2026-09-11
+> Última actualización: 2026-09-12
 
 ## Retomar en cinco minutos
 
@@ -44,7 +44,8 @@ npm run typecheck
 |---|---|
 | **A — Fundación técnica** | **Completa** |
 | **E — Motor de agendamiento** | **Completa** |
-| B, C, D, F, G, H, I, J, K | Sin empezar |
+| B — Negocio y onboarding | B1, B3 y B4 en revisión (falta prueba manual en vista previa). B2 y B5 pendientes |
+| C, D, F, G, H, I, J, K | Sin empezar |
 
 **El esquema de datos está completo para todo el MVP.** Las épicas B, C, D y H
 ya no necesitan tocar la base salvo ajustes menores.
@@ -58,20 +59,42 @@ Todo esto está desplegado y andando en
 - `/login` — ingreso con correo y contraseña
 - `/panel` — panel protegido, con las próximas citas
 - `/api/cron/cleanup-holds` — libera retenciones vencidas (nadie lo llama aún)
+
+En ramas, todavía sin fusionar a `main` (cada una encima de la anterior:
+`feat/B1-registro-de-negocio` → `feat/B3-slug-publico` →
+`feat/B4-perfil-del-negocio`). Sus migraciones **ya están aplicadas** al
+proyecto de desarrollo:
+
+- `/registro` — crea la cuenta del dueño
+- `/auth/confirmar` — destino del enlace de confirmación de correo
+- `/bienvenida` — crea el negocio: tipo y link, con revisión en vivo del link
+- `/panel/negocio` — perfil: datos, ubicación en mapa, fotos, zona horaria
 - `lib/scheduling/` — el motor de cupos, con 28 pruebas
 
 Comprobación: 73 pruebas en verde, `typecheck` y `lint` limpios.
 
 ### Qué sigue
 
-**Épica B (negocio y onboarding).** Es el siguiente paso natural ahora que la
-fundación está cerrada: hoy los dos negocios de la base existen **solo porque
-los creó el seed**. Sin B no hay forma de que un dueño real entre al producto,
-y C, D y F construyen encima de lo que B crea.
+**Cerrar B1, B3 y B4:** probar el registro completo a mano en la vista previa de
+Vercel y fusionar las ramas. Luego **C1 (servicios)**: B5 (editar las plantillas
+precargadas) necesita casi lo mismo, y B2 (el asistente por pasos) une B, C y D,
+así que se cierra al final.
 
-Después, en orden: C (servicios) → D (trabajadores y horarios) → F (reserva
-pública), que es donde el motor de cupos por fin se conecta con la base y
-`/[slug]` deja de ser una vitrina.
+Después, en orden: D (trabajadores y horarios) → F (reserva pública), que es
+donde el motor de cupos por fin se conecta con la base y `/[slug]` deja de ser
+una vitrina.
+
+**Dos decisiones abiertas antes de tener dueños reales:**
+
+1. **Confirmación de correo.** El proyecto de desarrollo parece exigirla, y el
+   correo por defecto de Supabase no sirve para usuarios reales. O se apaga
+   hasta configurar Resend como SMTP, o se configura Resend ya. El código
+   funciona con las dos.
+2. **Un negocio en prueba gratis tiene su página pública apagada.** La política
+   `publico_lee_negocio_activo` exige `status = 'active'`, y los negocios nacen
+   en `trialing`. Contradice el flujo 6 (se le entrega su link y arranca la
+   prueba). La corrección natural es aceptar `trialing` también, pero decide qué
+   pasa con `past_due` durante el período de gracia, que es la épica J.
 
 ## Entorno
 
@@ -164,6 +187,9 @@ operación y no valía la pena arrastrar una librería.
 | Aparece un bloque raro al final de `CLAUDE.md` | Lo escribe `next dev` solo. Se vuelve a poner si se borra |
 | Un negocio no aparece en su página pública | `is_published` en falso o `status` distinto de `active`. Es RLS haciendo su trabajo |
 | El despliegue de una rama sale rojo por variables faltantes | Las variables están solo en Production. Marcarlas también en Preview |
+| Un `update` del dueño sobre `businesses` falla con "permission denied" | La columna no tiene `grant update` para `authenticated`. Es a propósito para `status` y `slug`; para una columna nueva, falta el grant |
+| Un negocio nuevo da 404 en su página pública aunque esté publicado | Está en `trialing`. Ver "Dos decisiones abiertas" arriba |
+| Un negocio con slug `registro`, `bienvenida`, etc. no se puede crear | Slugs reservados por rutas de la aplicación. Una ruta nueva de primer nivel va en `slug_es_reservado()` |
 
 ## Cómo mantener esto vivo
 

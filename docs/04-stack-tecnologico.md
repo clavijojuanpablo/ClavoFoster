@@ -28,6 +28,7 @@ optimizando, en este orden:
 | Hosting | Vercel | $0 → $20/mes |
 | Interfaz | Tailwind CSS 4 + shadcn/ui | $0 |
 | Calendario | Librería de agenda con arrastrar y soltar | $0 |
+| Mapa | Leaflet + OpenStreetMap (Nominatim para buscar) | $0 |
 | Validación | Zod | $0 |
 | Cobro recurrente | Mercado Pago Suscripciones | Comisión por transacción |
 | Mensajería | WhatsApp Cloud API (Meta, directo) | Por mensaje |
@@ -112,6 +113,28 @@ Es la decisión de interfaz más importante y hay que tomarla al llegar a la
 - Licencia compatible con un producto comercial. **Verificar esto antes de
   escribir una línea**: varias librerías populares de calendario son de pago
   para uso comercial, y descubrirlo después de construir encima es carísimo.
+
+### Leaflet y OpenStreetMap para el mapa
+
+Se usa en un solo lugar: el dueño marca dónde queda su local (tarea B4). Las
+coordenadas no se usan en el MVP; alimentan el directorio futuro.
+
+**Se eligió sobre Google Maps** porque es gratis, no pide llave ni tarjeta, y el
+uso es mínimo (cada negocio marca su ubicación una vez). Lo que se guarda es la
+posición del pin que el dueño arrastra, no el resultado del buscador, así que
+la peor calidad de búsqueda de direcciones colombianas en OpenStreetMap importa
+poco. También hay botón "Estoy en el local", que usa el GPS del celular.
+
+**Límites que hay que respetar:** el buscador gratuito (Nominatim) permite como
+máximo una petición por segundo, exige identificar la aplicación y prohíbe el
+autocompletado. Por eso solo se llama al tocar "Buscar", desde el servidor. Los
+mosaicos de `tile.openstreetmap.org` son para uso liviano y exigen la
+atribución visible.
+
+**Cuándo cambiar:** si el directorio se enciende y el mapa pasa a mostrarse a
+clientes finales, ese volumen ya no es uso liviano. Ahí toca un proveedor de
+mosaicos pago o Google Maps, con cifras verificadas en ese momento. El cambio
+queda contenido en `components/admin/mapa-ubicacion.tsx` y en `buscarDireccion`.
 
 ### Zod
 

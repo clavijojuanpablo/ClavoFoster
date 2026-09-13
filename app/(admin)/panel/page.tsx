@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { cerrarSesion } from '@/app/(admin)/login/actions';
 import { createClient } from '@/lib/supabase/server';
 import { requireNegocio } from '@/lib/tenant';
@@ -55,6 +57,16 @@ export default async function PanelPage() {
               /{negocio.slug}
             </a>
           </p>
+          {rol === 'owner' && (
+            <p className="mt-1 text-sm">
+              <Link href="/panel/negocio" className="underline underline-offset-2">
+                Perfil del negocio
+              </Link>
+              {negocio.latitude === null && (
+                <span className="text-neutral-500"> · falta la ubicación</span>
+              )}
+            </p>
+          )}
         </div>
 
         <form action={cerrarSesion}>

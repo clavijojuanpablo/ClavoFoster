@@ -117,7 +117,7 @@ despliegue de vista previa. Lo verificado en vivo:
 | B1 | Registro de negocio (email, contraseña, nombre, celular) | M | En revisión |
 | B2 | Asistente de onboarding por pasos, salteable y retomable | M | Pendiente |
 | B3 | Selección de slug público con validación de disponibilidad | M | En revisión |
-| B4 | Perfil del negocio: dirección con mapa, categoría, fotos, zona horaria | M | Pendiente |
+| B4 | Perfil del negocio: dirección con mapa, categoría, fotos, zona horaria | M | En revisión |
 | B5 | Plantillas de servicios precargadas por tipo de negocio | S | Pendiente |
 
 **B1 — Registro.** Dos pantallas, no una: `/registro` crea la cuenta y
@@ -143,6 +143,17 @@ Criterios:
 - `timezone` se guarda por negocio, con `America/Bogota` por defecto.
 - La dirección guarda latitud y longitud, no solo texto.
 - El negocio puede terminar el onboarding sin fotos y agregarlas luego.
+
+Implementado en `/panel/negocio`, solo para el dueño. El mapa es Leaflet con
+OpenStreetMap (ver `04-stack-tecnologico.md`): se guarda la posición del pin,
+que se puede ubicar tocando el mapa, buscando la dirección o con el GPS. Las
+fotos se reducen en el navegador a 1600 px antes de subirse. **Pendiente
+conocido:** una foto subida y quitada antes de guardar queda huérfana en
+Storage; es poco peso y se limpia con un trabajo programado cuando haga falta.
+
+Al revisar esta tarea apareció un hueco de seguridad y se cerró en la misma
+migración: el dueño podía cambiarse `status` y `slug` por API. Ver
+`07-modelo-de-datos.md`.
 
 **B5 — Plantillas precargadas.** Al escoger "Barbería" se crean servicios
 sugeridos (corte, barba, corte + barba, cejas...) con duración y precio de
