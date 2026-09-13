@@ -56,6 +56,7 @@ export default async function PanelPage() {
             <a href={`/${negocio.slug}`} className="underline underline-offset-2">
               /{negocio.slug}
             </a>
+            {!negocio.is_published && <span className="text-amber-700"> · oculta</span>}
           </p>
           {rol === 'owner' && (
             <p className="mt-1 text-sm">

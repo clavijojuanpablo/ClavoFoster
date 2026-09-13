@@ -78,6 +78,11 @@ export function esquemaPerfil(businessId: string) {
         }
         return normalizado;
       }),
+      // Checkbox: el navegador manda 'on' si está marcado y nada si no.
+      publicada: z
+        .string()
+        .optional()
+        .transform((v) => v === 'on'),
       direccion: textoOpcional(200, 'La dirección puede tener hasta 200 caracteres'),
       ciudad: textoOpcional(80, 'La ciudad puede tener hasta 80 caracteres'),
       latitud: coordenada(-90, 90),

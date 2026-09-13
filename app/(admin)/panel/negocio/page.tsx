@@ -45,6 +45,8 @@ export default async function PerfilNegocioPage() {
           nombreNegocio: negocio.name,
           categoria: negocio.category,
           celular: negocio.phone ?? '',
+          publicada: negocio.is_published,
+          slug: negocio.slug,
           direccion: negocio.address ?? '',
           ciudad: negocio.city ?? '',
           latitud: negocio.latitude === null ? null : Number(negocio.latitude),

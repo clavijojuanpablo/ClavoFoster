@@ -361,6 +361,11 @@ supuesto y no un hecho.
 | J5 | Cobro manual (transferencia/Nequi) activado por super-admin | M | Pendiente |
 | J6 | Mora, avisos, período de gracia y suspensión | M | Pendiente |
 
+**J3 — Estados y página pública.** Ya resuelto en la base (2026-09-12): la
+página pública está visible en `trialing`, `active` y `past_due`, y se apaga al
+pasar a `suspended`. La regla vive en `estado_tiene_pagina_publica()`. Falta el
+resto de J3: el trabajo que vence la prueba a los 14 días.
+
 **J1 — Interfaz propia.** El código de la aplicación nunca llama a Mercado Pago
 directamente. Habla con una interfaz propia (`crearSuscripcion`, `cancelar`,
 `obtenerEstado`) y detrás hay un adaptador. Así, cambiar a Wompi o sumarlo es

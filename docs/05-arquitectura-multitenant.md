@@ -158,23 +158,34 @@ El cliente final entra sin autenticarse. Se resuelve en dos caminos separados:
 negocio decidió publicar, y solo de negocios activos:
 
 ```sql
-create policy "publico_ve_negocio_activo" on businesses
-  for select to anon
-  using (is_published = true and status = 'active');
+-- Qué estados de suscripción tienen página pública. Un solo lugar.
+create function estado_tiene_pagina_publica(p_status business_status)
+returns boolean immutable
+as $$ select p_status in ('trialing', 'active', 'past_due'); $$;
 
-create policy "publico_ve_servicios_activos" on services
-  for select to anon
+create policy "publico_lee_negocio_activo" on businesses
+  for select to anon, authenticated
+  using (is_published and estado_tiene_pagina_publica(status));
+
+create policy "publico_lee_servicios_activos" on services
+  for select to anon, authenticated
   using (
-    is_active = true
+    is_active
     and business_id in (
-      select id from businesses where is_published = true and status = 'active'
+      select id from businesses
+      where is_published and estado_tiene_pagina_publica(status)
     )
   );
 ```
 
-Nótese que si la suscripción está suspendida, `status` deja de ser `active` y
-**la página pública se apaga sola**, sin código adicional. La suspensión por mora
-de `08-pagos-y-suscripciones.md` cae fuera de esta única regla.
+Nótese que si la suscripción se suspende, `status` pasa a `suspended` y **la
+página pública se apaga sola**, sin código adicional. Durante la prueba gratis
+(`trialing`) y los días de gracia tras un cobro fallido (`past_due`) sigue
+encendida, como define `08-pagos-y-suscripciones.md`: un negocio en prueba
+tiene que poder recibir reservas, que es lo que lo convence de pagar.
+
+Además, el dueño decide si su página está visible con `is_published`, desde el
+perfil del negocio. Un negocio nuevo nace oculto.
 
 **Escritura — nunca directa.** El cliente anónimo jamás escribe en la base. Crear
 una cita pasa por un Server Action en el servidor que:

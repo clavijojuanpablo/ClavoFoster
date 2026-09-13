@@ -10,6 +10,7 @@ const valido = {
   nombreNegocio: ' Barbería Don Juan ',
   categoria: 'barbershop',
   celular: '300 123 4567',
+  publicada: 'on',
   direccion: ' Calle 85 #12-34 ',
   ciudad: 'Bogotá',
   latitud: '4.6717',
@@ -26,6 +27,7 @@ describe('esquemaPerfil', () => {
       nombreNegocio: 'Barbería Don Juan',
       categoria: 'barbershop',
       celular: '+573001234567',
+      publicada: true,
       direccion: 'Calle 85 #12-34',
       ciudad: 'Bogotá',
       latitud: 4.6717,
@@ -33,6 +35,10 @@ describe('esquemaPerfil', () => {
       zonaHoraria: 'America/Bogota',
       fotos: [`${PROPIO}/${FOTO}`],
     });
+  });
+
+  it('sin el checkbox la página queda oculta', () => {
+    expect(esquema.parse({ ...valido, publicada: undefined }).publicada).toBe(false);
   });
 
   it('se puede guardar sin dirección, ubicación ni fotos', () => {

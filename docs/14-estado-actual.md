@@ -38,63 +38,58 @@ npm run typecheck
 
 ## Avance
 
-**11 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
+**14 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
 
 | Épica | Estado |
 |---|---|
 | **A — Fundación técnica** | **Completa** |
 | **E — Motor de agendamiento** | **Completa** |
-| B — Negocio y onboarding | B1, B3 y B4 en revisión (falta prueba manual en vista previa). B2 y B5 pendientes |
+| B — Negocio y onboarding | B1, B3 y B4 hechas. B2 y B5 pendientes |
 | C, D, F, G, H, I, J, K | Sin empezar |
-
-**El esquema de datos está completo para todo el MVP.** Las épicas B, C, D y H
-ya no necesitan tocar la base salvo ajustes menores.
 
 ### Lo que ya funciona
 
-Todo esto está desplegado y andando en
-**https://clavo-foster-5lt7.vercel.app**, no solo en local:
+Desplegado en **https://clavo-foster-5lt7.vercel.app**:
 
 - `/[slug]` — página pública del negocio, sin sesión. Ej. `/barberia-demo`
 - `/login` — ingreso con correo y contraseña
 - `/panel` — panel protegido, con las próximas citas
 - `/api/cron/cleanup-holds` — libera retenciones vencidas (nadie lo llama aún)
+- `lib/scheduling/` — el motor de cupos, con 28 pruebas
 
-En ramas, todavía sin fusionar a `main` (cada una encima de la anterior:
-`feat/B1-registro-de-negocio` → `feat/B3-slug-publico` →
-`feat/B4-perfil-del-negocio`). Sus migraciones **ya están aplicadas** al
-proyecto de desarrollo:
+En ramas probadas pero **todavía sin fusionar a `main`**, cada una encima de la
+anterior: `feat/B1-registro-de-negocio` → `feat/B3-slug-publico` →
+`feat/B4-perfil-del-negocio` → `fix/J3-negocio-en-prueba-visible`. Basta con
+fusionar la última. Sus migraciones **ya están aplicadas** al proyecto de
+desarrollo:
 
 - `/registro` — crea la cuenta del dueño
 - `/auth/confirmar` — destino del enlace de confirmación de correo
 - `/bienvenida` — crea el negocio: tipo y link, con revisión en vivo del link
-- `/panel/negocio` — perfil: datos, ubicación en mapa, fotos, zona horaria
-- `lib/scheduling/` — el motor de cupos, con 28 pruebas
+- `/panel/negocio` — perfil: página visible u oculta, datos, ubicación en mapa,
+  fotos, zona horaria
 
-Comprobación: 73 pruebas en verde, `typecheck` y `lint` limpios.
+Comprobación: 143 pruebas en verde, `typecheck` y `lint` limpios.
 
 ### Qué sigue
 
-**Cerrar B1, B3 y B4:** probar el registro completo a mano en la vista previa de
-Vercel y fusionar las ramas. Luego **C1 (servicios)**: B5 (editar las plantillas
-precargadas) necesita casi lo mismo, y B2 (el asistente por pasos) une B, C y D,
-así que se cierra al final.
+**C1 (servicios).** B5 (editar las plantillas precargadas) necesita casi lo
+mismo, y B2 (el asistente por pasos) une B, C y D, así que se cierra al final.
 
 Después, en orden: D (trabajadores y horarios) → F (reserva pública), que es
 donde el motor de cupos por fin se conecta con la base y `/[slug]` deja de ser
 una vitrina.
 
-**Dos decisiones abiertas antes de tener dueños reales:**
+**Pendiente antes de tener dueños reales: la confirmación de correo.** El
+proyecto parece exigir que el dueño confirme su correo, y el servicio de correo
+que trae Supabase por defecto no le entrega a direcciones reales. O se apaga la
+confirmación, o se configura Resend como servidor de correo. El código funciona
+con las dos.
 
-1. **Confirmación de correo.** El proyecto de desarrollo parece exigirla, y el
-   correo por defecto de Supabase no sirve para usuarios reales. O se apaga
-   hasta configurar Resend como SMTP, o se configura Resend ya. El código
-   funciona con las dos.
-2. **Un negocio en prueba gratis tiene su página pública apagada.** La política
-   `publico_lee_negocio_activo` exige `status = 'active'`, y los negocios nacen
-   en `trialing`. Contradice el flujo 6 (se le entrega su link y arranca la
-   prueba). La corrección natural es aceptar `trialing` también, pero decide qué
-   pasa con `past_due` durante el período de gracia, que es la épica J.
+**Negocios en prueba:** su página pública es visible (decidido el 2026-09-12). Se
+apaga solo al pasar a `suspended`. Ojo: mientras no exista el trabajo programado
+de la épica J que vence las pruebas, un negocio se queda en `trialing` para
+siempre.
 
 ## Entorno
 
@@ -185,11 +180,9 @@ operación y no valía la pena arrastrar una librería.
 | Las pruebas fallan y quedan "skipped" | Límite de peticiones de Supabase Auth. Esperar unos minutos. No es un bug |
 | `npm run dev` dice que el puerto está ocupado | Quedó un servidor anterior vivo. `taskkill /PID <pid> /F` |
 | Aparece un bloque raro al final de `CLAUDE.md` | Lo escribe `next dev` solo. Se vuelve a poner si se borra |
-| Un negocio no aparece en su página pública | `is_published` en falso o `status` distinto de `active`. Es RLS haciendo su trabajo |
+| Un negocio no aparece en su página pública (404) | `is_published` en falso —todo negocio nace oculto y se activa en Perfil del negocio— o `status` en `suspended`/`cancelled`. Es RLS haciendo su trabajo |
 | El despliegue de una rama sale rojo por variables faltantes | Las variables están solo en Production. Marcarlas también en Preview |
-| Un `update` del dueño sobre `businesses` falla con "permission denied" | La columna no tiene `grant update` para `authenticated`. Es a propósito para `status` y `slug`; para una columna nueva, falta el grant |
-| Un negocio nuevo da 404 en su página pública aunque esté publicado | Está en `trialing`. Ver "Dos decisiones abiertas" arriba |
-| Un negocio con slug `registro`, `bienvenida`, etc. no se puede crear | Slugs reservados por rutas de la aplicación. Una ruta nueva de primer nivel va en `slug_es_reservado()` |
+| Un `update` del dueño sobre `businesses` falla con "permission denied" | La columna no tiene `grant update` para `authenticated`. Es a propósito para `status` y `slug`; para una columna nueva, falta el grant || Un negocio con slug `registro`, `bienvenida`, etc. no se puede crear | Slugs reservados por rutas de la aplicación. Una ruta nueva de primer nivel va en `slug_es_reservado()` |
 
 ## Cómo mantener esto vivo
 

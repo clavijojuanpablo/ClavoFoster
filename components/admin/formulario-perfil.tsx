@@ -28,6 +28,8 @@ export type PerfilInicial = {
   nombreNegocio: string;
   categoria: string;
   celular: string;
+  publicada: boolean;
+  slug: string;
   direccion: string;
   ciudad: string;
   latitud: number | null;
@@ -58,6 +60,7 @@ export function FormularioPerfil({
   const [nombre, setNombre] = useState(inicial.nombreNegocio);
   const [categoria, setCategoria] = useState(inicial.categoria);
   const [celular, setCelular] = useState(inicial.celular);
+  const [publicada, setPublicada] = useState(inicial.publicada);
   const [direccion, setDireccion] = useState(inicial.direccion);
   const [ciudad, setCiudad] = useState(inicial.ciudad);
   const [zona, setZona] = useState(inicial.zonaHoraria);
@@ -117,6 +120,28 @@ export function FormularioPerfil({
 
   return (
     <form action={accion} className="space-y-8" noValidate>
+      <section>
+        <label className="flex cursor-pointer items-start gap-3 rounded-md border border-neutral-300 p-4 has-checked:border-green-700 has-checked:bg-green-50 dark:border-neutral-700 dark:has-checked:border-green-600 dark:has-checked:bg-green-950/40">
+          <input
+            type="checkbox"
+            name="publicada"
+            checked={publicada}
+            onChange={(e) => setPublicada(e.target.checked)}
+            className="mt-0.5 size-4 accent-green-700"
+          />
+          <span className="text-sm">
+            <span className="block font-medium">
+              {publicada ? 'Tu página pública está visible' : 'Tu página pública está oculta'}
+            </span>
+            <span className="mt-0.5 block text-neutral-600 dark:text-neutral-400">
+              {publicada
+                ? `Cualquiera con tu link /${inicial.slug} puede verla.`
+                : 'Actívala cuando quieras que tus clientes vean tu link. El cambio se aplica al guardar.'}
+            </span>
+          </span>
+        </label>
+      </section>
+
       <section className="space-y-4">
         <h2 className="text-sm font-medium text-neutral-500">Datos básicos</h2>
 
