@@ -21,7 +21,10 @@ import { refrescarSesion } from '@/lib/supabase/proxy';
  * seguiría protegiendo los datos.
  */
 
-const RUTAS_PRIVADAS = ['/panel'];
+const RUTAS_PRIVADAS = ['/panel', '/bienvenida'];
+
+/** Formularios que no tienen sentido con sesión activa. */
+const RUTAS_SOLO_SIN_SESION = ['/login', '/registro'];
 
 export async function proxy(request: NextRequest) {
   const { response, user } = await refrescarSesion(request);
@@ -37,8 +40,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(destino);
   }
 
-  // Con sesión activa no tiene sentido quedarse en el formulario de ingreso.
-  if (ruta === '/login' && user) {
+  // Con sesión activa no tiene sentido quedarse en el ingreso ni en el registro.
+  // /panel se encarga de mandarlo a /bienvenida si todavía no tiene negocio.
+  if (RUTAS_SOLO_SIN_SESION.includes(ruta) && user) {
     const destino = request.nextUrl.clone();
     destino.pathname = '/panel';
     destino.search = '';

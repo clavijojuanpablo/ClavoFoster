@@ -101,6 +101,26 @@ palabras que chocarían con rutas de la aplicación (`api`, `admin`, `app`,
 > esquema: una comparación que se comporta diferente según la columna es
 > justamente el tipo de sorpresa que cuesta caro después.
 
+**Qué puede cambiar el dueño.** La política de RLS decide qué *fila* toca; los
+permisos por columna deciden qué *columnas*. El rol `authenticated` solo tiene
+`UPDATE` sobre los datos del perfil, la marca, la ubicación, las fotos, la zona
+horaria, las reglas de reserva e `is_published`. **`status` y `slug` quedan
+fuera**: sin esto, un dueño en prueba se ponía `status = 'active'` desde la
+consola del navegador y nunca pagaba. `status` lo cambian solo la facturación y
+el super-admin, con la llave secreta. Una columna nueva que el dueño deba
+editar necesita su `grant update` en la migración que la crea.
+
+**Ubicación, zona horaria y fotos** (tarea B4):
+
+- `latitude` y `longitude` van las dos o ninguna (`coordenadas_completas`).
+- `timezone` se valida contra `pg_timezone_names` con un trigger — no puede ser
+  un `CHECK` porque esa vista no es inmutable. Una zona inventada rompería la
+  conversión a UTC del motor de cupos. Error con hint `zona_horaria_invalida`.
+- `photos` es una lista JSON de hasta 10 **rutas** dentro del bucket público
+  `business-photos`, no URLs. Cada ruta es `<business_id>/<uuid>.jpg`; la
+  política de `storage.objects` solo deja subir, ver y borrar en la carpeta de
+  un negocio del que el usuario es dueño.
+
 ### memberships
 
 Definida en `05-arquitectura-multitenant.md`. Resuelve permisos por la pareja
@@ -542,10 +562,37 @@ Tres decisiones que importan:
   único punto de entrada auditable, en vez de repartir la llave maestra por el
   flujo de onboarding.
 
+**Errores esperados con `HINT` fijo.** La interfaz los reconoce por el hint, no
+por el texto del mensaje:
+
+| Hint | Cuándo |
+|---|---|
+| `sin_sesion` | Llamada sin usuario autenticado |
+| `ya_tiene_negocio` | La cuenta ya es dueña de un negocio |
+| `slug_tomado` | El slug existe, incluida la carrera entre dos altas simultáneas |
+
+**Como se puede llamar por RPC saltándose la aplicación, la base repite las
+validaciones de Zod** con restricciones sobre `businesses`: `categoria_valida`
+(solo las cinco categorías con plantillas), `nombre_valido` (2 a 80
+caracteres) y `slug_no_reservado`, que incluye **toda ruta de primer nivel de la
+aplicación** (`registro`, `bienvenida`, `auth`...). Una ruta nueva de primer
+nivel se agrega en `slug_es_reservado()` (con una migración nueva) y en
+`lib/validation/negocio.ts`; si no, un negocio puede
+quedarse con ese slug y su página pública queda tapada por la ruta.
+
 ### slug_disponible()
 
 Valida el slug en vivo durante el onboarding sin exponer la tabla `businesses` a
 consultas del navegador.
+
+**"Disponible" significa "`create_business` lo aceptaría":** libre, con formato
+válido y no reservado. Las reglas viven en `slug_tiene_formato()` y
+`slug_es_reservado()`, que usan tanto esta función como las restricciones
+`slug_formato` y `slug_no_reservado` de `businesses`, para que no puedan
+contradecirse.
+
+Solo la ejecuta el rol `authenticated`. Sin sesión serviría para enumerar los
+slugs de negocios que todavía no publicaron su página.
 
 ## Migraciones
 

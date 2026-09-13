@@ -24,8 +24,8 @@ quien la hizo.
 
 | Épica | Tareas | Hechas | Estado |
 |---|---|---|---|
-| A. Fundación técnica | 6 | 5 | En curso |
-| B. Negocio y onboarding | 5 | 0 | Pendiente |
+| A. Fundación técnica | 6 | 6 | **Hecho** |
+| B. Negocio y onboarding | 5 | 3 | En curso |
 | C. Servicios | 3 | 0 | Pendiente |
 | D. Trabajadores y horarios | 5 | 0 | Pendiente |
 | E. Motor de agendamiento | 5 | 5 | **Hecho** |
@@ -35,7 +35,7 @@ quien la hizo.
 | I. Notificaciones | 5 | 0 | Pendiente |
 | J. Suscripciones | 6 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **55** | **10** | |
+| **Total MVP** | **55** | **14** | |
 
 ## Orden de ejecución
 
@@ -71,7 +71,7 @@ una demo por consola que ya convence a un dueño de barbería.
 | A3 | Esquema base y políticas RLS de `07-modelo-de-datos.md` | M | **Hecho** |
 | A4 | Resolución de tenant por slug y por sesión | M | **Hecho** |
 | A5 | Autenticación de dueño y trabajador (email + contraseña) | M | **Hecho** |
-| A6 | Despliegue en Vercel con entornos de desarrollo y producción | M | Pendiente |
+| A6 | Despliegue en Vercel con entornos de desarrollo y producción | M | **Hecho** |
 
 **A3 — Esquema base y RLS.** Criterios de aceptación:
 - Toda tabla de negocio tiene `tenant_id` y RLS activa.
@@ -87,17 +87,52 @@ una demo por consola que ya convence a un dueño de barbería.
 - Un `tenant_id` enviado por el cliente se ignora siempre. Hay una prueba que lo
   verifica.
 
+**A6 — Despliegue en Vercel.** Cerrada el 2026-09-11. Vercel está conectado al
+repositorio: cada `push` a `main` despliega a producción y cada rama genera un
+despliegue de vista previa. Lo verificado en vivo:
+
+- La página pública `/[slug]` sirve datos reales desde Supabase.
+- `/panel` sin sesión responde `307` hacia `/login`. El `proxy.ts` corre.
+- Un slug inexistente responde `404`, no una página en blanco.
+- `/api/cron/cleanup-holds` sin cabecera responde `401`, no `500` — es decir,
+  `CRON_SECRET` sí quedó configurado en Vercel.
+
+**Lo que quedó aplazado a propósito, y no bloquea ninguna épica:**
+
+- **No hay proyecto de Supabase de producción todavía.** El despliegue apunta al
+  proyecto de *desarrollo*. Sirve para mostrar el producto, no para negocios
+  reales. Crear el proyecto de producción y repuntar Vercel es requisito **antes
+  de la primera venta**, no antes de la épica B. Ver la épica J.
+- **Nadie llama a `/api/cron/cleanup-holds` todavía.** El endpoint funciona,
+  pero no hay programador. Se resuelve con `pg_cron` en Supabase cuando la
+  épica F empiece a crear retenciones — el plan gratuito de Vercel solo permite
+  una ejecución diaria, que para retenciones de 10 minutos no sirve.
+
 ---
 
 # Épica B — Negocio y onboarding
 
 | ID | Tarea | Pri | Estado |
 |---|---|---|---|
-| B1 | Registro de negocio (email, contraseña, nombre, celular) | M | Pendiente |
+| B1 | Registro de negocio (email, contraseña, nombre, celular) | M | **Hecho** |
 | B2 | Asistente de onboarding por pasos, salteable y retomable | M | Pendiente |
-| B3 | Selección de slug público con validación de disponibilidad | M | Pendiente |
-| B4 | Perfil del negocio: dirección con mapa, categoría, fotos, zona horaria | M | Pendiente |
+| B3 | Selección de slug público con validación de disponibilidad | M | **Hecho** |
+| B4 | Perfil del negocio: dirección con mapa, categoría, fotos, zona horaria | M | **Hecho** |
 | B5 | Plantillas de servicios precargadas por tipo de negocio | S | Pendiente |
+
+**B1 — Registro.** Dos pantallas, no una: `/registro` crea la cuenta y
+`/bienvenida` crea el negocio. La razón es técnica: si Supabase exige confirmar
+el correo, al registrarse todavía no hay sesión y `create_business()` necesita
+`auth.uid()`. El nombre del negocio y el celular viajan en los metadatos del
+usuario y prellenan `/bienvenida`, así que el dueño no escribe nada dos veces.
+Funciona con la confirmación de correo encendida o apagada.
+
+**B3 — Slug público.** En `/bienvenida` el link se sugiere desde el nombre
+y se revisa en vivo 400 ms después de dejar de escribir. Si está tomado, se
+ofrece una alternativa libre (`-2`, `-3`...) con un toque. La revisión es solo
+ayuda: la garantía es el índice único al crear el negocio. **Cambiar el slug
+después del alta queda fuera a propósito**: rompe los links que el negocio ya
+compartió en Instagram y WhatsApp, y necesita redirección desde el slug viejo.
 
 **B4 — Perfil del negocio.** La dirección con coordenadas, la categoría y las
 fotos **no se usan en el MVP**: alimentan el directorio futuro. Se piden ahora
@@ -108,6 +143,17 @@ Criterios:
 - `timezone` se guarda por negocio, con `America/Bogota` por defecto.
 - La dirección guarda latitud y longitud, no solo texto.
 - El negocio puede terminar el onboarding sin fotos y agregarlas luego.
+
+Implementado en `/panel/negocio`, solo para el dueño. El mapa es Leaflet con
+OpenStreetMap (ver `04-stack-tecnologico.md`): se guarda la posición del pin,
+que se puede ubicar tocando el mapa, buscando la dirección o con el GPS. Las
+fotos se reducen en el navegador a 1600 px antes de subirse. **Pendiente
+conocido:** una foto subida y quitada antes de guardar queda huérfana en
+Storage; es poco peso y se limpia con un trabajo programado cuando haga falta.
+
+Al revisar esta tarea apareció un hueco de seguridad y se cerró en la misma
+migración: el dueño podía cambiarse `status` y `slug` por API. Ver
+`07-modelo-de-datos.md`.
 
 **B5 — Plantillas precargadas.** Al escoger "Barbería" se crean servicios
 sugeridos (corte, barba, corte + barba, cejas...) con duración y precio de
@@ -314,6 +360,11 @@ supuesto y no un hecho.
 | J4 | Webhooks de pago, con verificación de firma e idempotencia | M | Pendiente |
 | J5 | Cobro manual (transferencia/Nequi) activado por super-admin | M | Pendiente |
 | J6 | Mora, avisos, período de gracia y suspensión | M | Pendiente |
+
+**J3 — Estados y página pública.** Ya resuelto en la base (2026-09-12): la
+página pública está visible en `trialing`, `active` y `past_due`, y se apaga al
+pasar a `suspended`. La regla vive en `estado_tiene_pagina_publica()`. Falta el
+resto de J3: el trabajo que vence la prueba a los 14 días.
 
 **J1 — Interfaz propia.** El código de la aplicación nunca llama a Mercado Pago
 directamente. Habla con una interfaz propia (`crearSuscripcion`, `cancelar`,

@@ -76,7 +76,8 @@ type PublicBusiness = {
 };
 ```
 
-Solo devuelve negocios con `is_published = true` y `status = 'active'`. Un
+Solo devuelve negocios con `is_published = true` y una suscripción en
+`trialing`, `active` o `past_due` (función `estado_tiene_pagina_publica`). Un
 negocio suspendido por mora da `NOT_FOUND` — no "suspendido", porque el estado de
 pago del negocio no es asunto del cliente final.
 

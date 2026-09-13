@@ -9,7 +9,12 @@ Un solo producto, vendido a muchos negocios, sin instalaciones personalizadas.
 
 ## Estado
 
-Fase de definición. Todavía no hay código de aplicación.
+**En construcción. Épicas A (fundación) y E (motor de agendamiento) completas —
+11 de 55 tareas del MVP.** Lo siguiente es la épica B, negocio y onboarding.
+
+Demostración en vivo: **https://clavo-foster-5lt7.vercel.app** — apunta al
+proyecto de *desarrollo* de Supabase, no sirve para negocios reales. Ver
+`/barberia-demo` para la página pública de un negocio.
 
 ## Documentación
 

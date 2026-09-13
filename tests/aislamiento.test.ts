@@ -272,12 +272,39 @@ describe('lo que ve alguien sin sesión', () => {
     await admin.from('businesses').update({ is_published: true }).eq('id', negocioA.businessId);
   });
 
-  it('no ve el negocio si la suscripción está suspendida', async () => {
-    await admin.from('businesses').update({ status: 'suspended' }).eq('id', negocioA.businessId);
+  it.each(['suspended', 'cancelled'] as const)(
+    'no ve el negocio ni su catálogo si la suscripción está %s',
+    async (status) => {
+      await admin.from('businesses').update({ status }).eq('id', negocioA.businessId);
 
-    const { data } = await anonimo.from('businesses').select('id').eq('id', negocioA.businessId);
-    expect(data).toEqual([]);
+      const { data } = await anonimo.from('businesses').select('id').eq('id', negocioA.businessId);
+      const { data: servicios } = await anonimo
+        .from('services')
+        .select('id')
+        .eq('business_id', negocioA.businessId);
+      expect(data).toEqual([]);
+      expect(servicios ?? []).toEqual([]);
 
-    await admin.from('businesses').update({ status: 'active' }).eq('id', negocioA.businessId);
-  });
+      await admin.from('businesses').update({ status: 'active' }).eq('id', negocioA.businessId);
+    },
+  );
+
+  // docs/08: la página se apaga al suspender, no antes. Un negocio en prueba
+  // tiene que poder recibir reservas, y uno en gracia también.
+  it.each(['trialing', 'past_due'] as const)(
+    'SÍ ve el negocio y su catálogo si la suscripción está %s',
+    async (status) => {
+      await admin.from('businesses').update({ status }).eq('id', negocioA.businessId);
+
+      const { data } = await anonimo.from('businesses').select('id').eq('id', negocioA.businessId);
+      const { data: servicios } = await anonimo
+        .from('services')
+        .select('id')
+        .eq('business_id', negocioA.businessId);
+      expect(data?.length).toBe(1);
+      expect(servicios?.length).toBeGreaterThan(0);
+
+      await admin.from('businesses').update({ status: 'active' }).eq('id', negocioA.businessId);
+    },
+  );
 });
