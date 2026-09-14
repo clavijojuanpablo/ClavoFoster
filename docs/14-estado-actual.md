@@ -3,7 +3,7 @@
 > **Empieza por acá si vuelves al proyecto después de un tiempo, o si eres
 > alguien nuevo.** Este documento se actualiza al terminar cada tarea.
 >
-> Última actualización: 2026-09-12
+> Última actualización: 2026-09-14
 
 ## Retomar en cinco minutos
 
@@ -38,12 +38,12 @@ npm run typecheck
 
 ## Avance
 
-**14 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
+**15 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
 
 | Épica | Estado |
 |---|---|
 | **E — Motor de agendamiento** | **Completa** |
-| A — Fundación técnica | A1–A6 hechas. **A7 (sistema de diseño) en revisión** |
+| **A — Fundación técnica** | **Completa** |
 | B — Negocio y onboarding | B1, B3 y B4 hechas. B2 y B5 pendientes |
 | C, D, F, G, H, I, J, K | Sin empezar. C2 (buffers) salió del MVP |
 
@@ -53,22 +53,19 @@ Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 
 - `/[slug]` — página pública del negocio, sin sesión. Ej. `/barberia-demo`
 - `/login`, `/registro`, `/bienvenida` — entrar, crear cuenta y crear el negocio
-- `/panel` — panel protegido
+- `/panel` — Inicio: citas de hoy, siguiente cita, caja del día y "Completa tu negocio"
 - `/panel/negocio` — perfil: página visible u oculta, datos, mapa, fotos, zona horaria
 - `/api/cron/cleanup-holds` — libera retenciones vencidas (nadie lo llama aún)
 - `lib/scheduling/` — el motor de cupos, con 28 pruebas
 
-En la rama `feat/A7-sistema-de-diseno`, **sin fusionar**: el nuevo diseño
-(`15-sistema-de-diseno.md`) aplicado a todas las pantallas anteriores, el menú
-lateral y la barra inferior, y el Inicio del panel con citas de hoy, siguiente
-cita, caja del día y "Completa tu negocio".
+Todo con el sistema de diseño de `15-sistema-de-diseno.md`: menú lateral en
+escritorio y barra inferior con hoja "Más" en celular.
 
 Comprobación: 157 pruebas en verde, `typecheck`, `lint` y `build` limpios.
 
 ### Qué sigue
 
-**Cerrar A7** (revisar la vista previa en celular y escritorio, fusionar) y
-luego **C1 (servicios)**, ya con el diseño nuevo y sin buffers. B5 (editar las
+**C1 (servicios)**, con el diseño nuevo y sin buffers. B5 (editar las
 plantillas precargadas) sale casi gratis con C1, y B2 (el asistente por pasos)
 une B, C y D, así que se cierra al final.
 
@@ -178,7 +175,8 @@ operación y no valía la pena arrastrar una librería.
 | Aparece un bloque raro al final de `CLAUDE.md` | Lo escribe `next dev` solo. Se vuelve a poner si se borra |
 | Un negocio no aparece en su página pública (404) | `is_published` en falso —todo negocio nace oculto y se activa en Perfil del negocio— o `status` en `suspended`/`cancelled`. Es RLS haciendo su trabajo |
 | El despliegue de una rama sale rojo por variables faltantes | Las variables están solo en Production. Marcarlas también en Preview |
-| Un `update` del dueño sobre `businesses` falla con "permission denied" | La columna no tiene `grant update` para `authenticated`. Es a propósito para `status` y `slug`; para una columna nueva, falta el grant || `npm run dev` avisa "Slow filesystem detected" | El proyecto está en un disco mecánico o en una carpeta comprimida o sincronizada. Va en `C:\Proyectos\bookia` (SSD). Ver `12-convenciones-de-desarrollo.md` |
+| Un `update` del dueño sobre `businesses` falla con "permission denied" | La columna no tiene `grant update` para `authenticated`. Es a propósito para `status` y `slug`; para una columna nueva, falta el grant |
+| `npm run dev` avisa "Slow filesystem detected" | El proyecto está en un disco mecánico o en una carpeta comprimida o sincronizada. Va en `C:\Proyectos\bookia` (SSD). Ver `12-convenciones-de-desarrollo.md` |
 | `typecheck` falla con `Type '"/panel/..."' does not satisfy the constraint` | Se agregó un `layout.tsx` o una página y los tipos de rutas de Next están viejos. `npx next typegen` |
 | Una sección del menú dice "Pronto" y no abre | Es a propósito: todavía no existe. Se activa en `components/admin/navegacion.ts` al terminar su tarea |
 | Un negocio con slug `registro`, `bienvenida`, etc. no se puede crear | Slugs reservados por rutas de la aplicación. Una ruta nueva de primer nivel va en `slug_es_reservado()` |

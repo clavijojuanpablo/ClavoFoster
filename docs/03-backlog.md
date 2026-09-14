@@ -24,7 +24,7 @@ quien la hizo.
 
 | Épica | Tareas | Hechas | Estado |
 |---|---|---|---|
-| A. Fundación técnica | 7 | 6 | En curso |
+| A. Fundación técnica | 7 | 7 | **Hecho** |
 | B. Negocio y onboarding | 5 | 3 | En curso |
 | C. Servicios | 2 | 0 | Pendiente |
 | D. Trabajadores y horarios | 5 | 0 | Pendiente |
@@ -35,7 +35,7 @@ quien la hizo.
 | I. Notificaciones | 5 | 0 | Pendiente |
 | J. Suscripciones | 6 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **55** | **14** | |
+| **Total MVP** | **55** | **15** | |
 
 ## Orden de ejecución
 
@@ -72,7 +72,7 @@ una demo por consola que ya convence a un dueño de barbería.
 | A4 | Resolución de tenant por slug y por sesión | M | **Hecho** |
 | A5 | Autenticación de dueño y trabajador (email + contraseña) | M | **Hecho** |
 | A6 | Despliegue en Vercel con entornos de desarrollo y producción | M | **Hecho** |
-| A7 | Sistema de diseño, menú responsive y pantallas existentes con el nuevo estilo | M | En revisión |
+| A7 | Sistema de diseño, menú responsive y pantallas existentes con el nuevo estilo | M | **Hecho** |
 
 **A7 — Sistema de diseño.** Se adelantó antes de la épica C para no construir
 las pantallas de servicios, equipo y calendario con un estilo que habría que
@@ -80,6 +80,11 @@ rehacer. Detalle en `15-sistema-de-diseno.md`. Incluye: tokens de color y
 tipografía, botón/tarjeta/campo, menú lateral en escritorio y barra inferior con
 hoja "Más" en celular, y el Inicio del panel con datos reales (citas de hoy,
 siguiente cita, caja del día y el recordatorio "Completa tu negocio").
+
+Cerrada el 2026-09-14. Revisada a mano sobre el build de producción, a 375 px y
+en escritorio: Inicio, Perfil del negocio, la hoja "Más" y la página pública.
+Las secciones que todavía no existen quedan en "Pronto" y se activan en
+`components/admin/navegacion.ts` al terminar su tarea.
 
 **A3 — Esquema base y RLS.** Criterios de aceptación:
 - Toda tabla de negocio tiene `tenant_id` y RLS activa.
