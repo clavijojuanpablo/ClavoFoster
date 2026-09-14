@@ -18,8 +18,9 @@ Tres superficies, un solo repositorio:
 Modelo de negocio: suscripción mensual que paga el **negocio**. El cliente final
 nunca paga por usar la plataforma.
 
-**El producto no tiene nombre comercial todavía.** En el código y los documentos
-se le dice "la Plataforma".
+**El producto se llama Bookia** (nombre provisional, 2026-09-14). En el código el
+nombre vive en un solo lugar, `lib/marca.ts`; no se escribe suelto en los
+componentes. Si cambia, también va en la lista de slugs reservados.
 
 ## Stack
 

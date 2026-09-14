@@ -1,11 +1,12 @@
 'use client';
 
-import { Check, ExternalLink, LogOut, SlidersHorizontal } from 'lucide-react';
+import { ExternalLink, LogOut, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { cerrarSesion } from '@/app/(admin)/login/actions';
 import { CopiarLink } from '@/components/admin/copiar-link';
+import { Marca } from '@/components/marca';
 import {
   esRutaActiva,
   MENU_NEGOCIO,
@@ -25,12 +26,8 @@ export function MenuLateral({ negocio, plan, urlPublica, rol }: DatosMenu) {
   return (
     <aside className="sticky top-0 hidden h-dvh p-3 pr-0 lg:block">
       <div className="flex h-full flex-col gap-5 overflow-y-auto rounded-3xl bg-sidebar px-3.5 py-5 text-papel">
-        <Link href="/panel" className="flex items-center gap-2.5 px-2">
-          <span className="flex size-[34px] items-center justify-center rounded-[10px] bg-lima text-tinta">
-            <Check className="size-5" strokeWidth={2.4} />
-          </span>
-          {/* El producto todavía no tiene nombre comercial. */}
-          <span className="font-heading text-[19px] font-bold tracking-[-0.02em]">[Nombre]</span>
+        <Link href="/panel" className="px-2">
+          <Marca />
         </Link>
 
         <div className="flex items-center gap-2.5 rounded-2xl bg-sidebar-accent p-2.5">

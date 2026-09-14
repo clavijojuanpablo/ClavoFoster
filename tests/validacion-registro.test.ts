@@ -85,7 +85,7 @@ describe('esquemaSlug', () => {
   );
 
   it('rechaza las rutas de la aplicación', () => {
-    for (const reservado of ['registro', 'bienvenida', 'login', 'panel', 'auth']) {
+    for (const reservado of ['registro', 'bienvenida', 'login', 'panel', 'auth', 'bookia']) {
       expect(SLUGS_RESERVADOS.has(reservado)).toBe(true);
       expect(esquemaSlug.safeParse(reservado).success).toBe(false);
     }

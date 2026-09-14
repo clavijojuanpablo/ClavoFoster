@@ -6,7 +6,7 @@
 ## Arranque
 
 ```bash
-git clone <repo> && cd app
+git clone <repo> bookia && cd bookia   # en un disco SSD, ver "Dónde vive el proyecto"
 npm install
 cp .env.example .env.local        # pedir los valores del proyecto de desarrollo
 npm run db:login                  # autenticarse con Supabase (abre el navegador)
@@ -16,14 +16,25 @@ npm run db:types                  # regenerar lib/types/database.ts
 npm run dev
 ```
 
+### Dónde vive el proyecto
+
+**En un disco SSD, en una ruta corta y sin espacios**: `C:\Proyectos\bookia`.
+
+`next dev` escribe miles de archivos pequeños en `.next/dev`. En un disco duro
+mecánico Next.js avisa *"Slow filesystem detected"* y todo va lento: arranque,
+recarga en caliente y pruebas. Tampoco conviene una carpeta con compresión de
+Windows activada ni una sincronizada con Google Drive o OneDrive. Si Windows
+Defender escanea cada archivo, excluir la carpeta del proyecto acelera bastante
+(eso lo hace el dueño del equipo, desde Seguridad de Windows).
+
 ### Contra qué base se desarrolla
 
 **Hay dos proyectos de Supabase, siempre separados:**
 
 | Proyecto | Para qué | Quién lo toca |
 |---|---|---|
-| `plataforma-citas-dev` | Desarrollo diario | Cualquiera del equipo |
-| `plataforma-citas-prod` | Negocios reales pagando | Solo despliegues, nunca a mano |
+| `bookia-dev` (ref `pubpfmsgwnyuhxleaysr`) | Desarrollo diario | Cualquiera del equipo |
+| `bookia-prod` (todavía no existe) | Negocios reales pagando | Solo despliegues, nunca a mano |
 
 **Nunca se desarrolla contra el proyecto de producción.** No es una preferencia:
 en producción viven las agendas y los teléfonos de clientes de negocios reales.

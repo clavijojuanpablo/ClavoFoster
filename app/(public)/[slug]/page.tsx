@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 
 import { duracion, iniciales, pesos } from '@/lib/formato';
 import { urlDeFoto } from '@/lib/fotos';
+import { NOMBRE_PRODUCTO } from '@/lib/marca';
 import { createClient } from '@/lib/supabase/server';
 import { getNegocioPublico } from '@/lib/tenant';
 
@@ -26,7 +27,8 @@ export async function generateMetadata({ params }: Props) {
   if (!negocio) return { title: 'Negocio no encontrado' };
 
   return {
-    title: `${negocio.name} — Reservar cita`,
+    // absolute: la página es del negocio (marca blanca), sin el nombre del producto en la pestaña.
+    title: { absolute: `${negocio.name} — Reservar cita` },
     description: `Reserva tu cita en ${negocio.name}${negocio.city ? `, ${negocio.city}` : ''}.`,
   };
 }
@@ -148,7 +150,7 @@ export default async function NegocioPage({ params }: Props) {
           )}
 
           <span className="self-center text-[13px] text-tenue">
-            Hecho con <strong className="font-semibold text-muted-foreground">[Nombre]</strong>
+            Hecho con <strong className="font-semibold text-muted-foreground">{NOMBRE_PRODUCTO}</strong>
           </span>
         </main>
       </div>

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Bricolage_Grotesque, Figtree } from 'next/font/google';
 
+import { NOMBRE_PRODUCTO } from '@/lib/marca';
+
 import './globals.css';
 
 // Títulos y cifras. Ver docs/15-sistema-de-diseno.md
@@ -18,7 +20,7 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: { default: 'Agenda para tu negocio', template: '%s' },
+  title: { default: `Agenda para tu negocio · ${NOMBRE_PRODUCTO}`, template: `%s · ${NOMBRE_PRODUCTO}` },
   description: 'Reservas en línea, agenda y caja para barberías, peluquerías y spas.',
 };
 

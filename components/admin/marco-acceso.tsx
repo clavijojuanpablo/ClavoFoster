@@ -1,6 +1,8 @@
 import { Check } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { Marca } from '@/components/marca';
+
 /**
  * Marco de las pantallas sin panel: entrar, registrarse y crear el negocio.
  * En escritorio, panel de marca a la izquierda; en celular, solo el formulario.
@@ -48,7 +50,7 @@ export function MarcoAcceso({
 
       <main className="flex flex-col px-5 py-8 sm:px-8 lg:justify-center lg:py-12">
         <div className="lg:hidden">
-          <Marca oscura={false} />
+          <Marca sobre="claro" />
         </div>
         <div className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center gap-7 pt-8 lg:flex-none lg:pt-0">
           <div className="flex flex-col gap-1.5">
@@ -59,19 +61,5 @@ export function MarcoAcceso({
         </div>
       </main>
     </div>
-  );
-}
-
-function Marca({ oscura = true }: { oscura?: boolean }) {
-  return (
-    <span className="flex items-center gap-2.5">
-      <span className="flex size-[34px] items-center justify-center rounded-[10px] bg-lima text-tinta">
-        <Check className="size-5" strokeWidth={2.4} />
-      </span>
-      {/* El producto todavía no tiene nombre comercial. */}
-      <span className={`font-heading text-[19px] font-bold tracking-[-0.02em] ${oscura ? 'text-papel' : 'text-tinta'}`}>
-        [Nombre]
-      </span>
-    </span>
   );
 }
