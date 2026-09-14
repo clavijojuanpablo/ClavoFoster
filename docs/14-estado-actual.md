@@ -38,14 +38,15 @@ npm run typecheck
 
 ## Avance
 
-**15 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
+**17 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
 
 | Épica | Estado |
 |---|---|
 | **E — Motor de agendamiento** | **Completa** |
 | **A — Fundación técnica** | **Completa** |
-| B — Negocio y onboarding | B1, B3 y B4 hechas. B2 y B5 pendientes |
-| C, D, F, G, H, I, J, K | Sin empezar. C2 (buffers) salió del MVP |
+| B — Negocio y onboarding | B1, B3, B4 y B5 hechas. B2 pendiente |
+| C — Servicios | C1 hecha. C3 (categorías y orden) pendiente. C2 (buffers) salió del MVP |
+| D, F, G, H, I, J, K | Sin empezar |
 
 ### Lo que ya funciona
 
@@ -55,23 +56,24 @@ Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 - `/login`, `/registro`, `/bienvenida` — entrar, crear cuenta y crear el negocio
 - `/panel` — Inicio: citas de hoy, siguiente cita, caja del día y "Completa tu negocio"
 - `/panel/negocio` — perfil: página visible u oculta, datos, mapa, fotos, zona horaria
+- `/panel/servicios` — crear, editar, desactivar y reactivar servicios
 - `/api/cron/cleanup-holds` — libera retenciones vencidas (nadie lo llama aún)
 - `lib/scheduling/` — el motor de cupos, con 28 pruebas
 
 Todo con el sistema de diseño de `15-sistema-de-diseno.md`: menú lateral en
 escritorio y barra inferior con hoja "Más" en celular.
 
-Comprobación: 157 pruebas en verde, `typecheck`, `lint` y `build` limpios.
+Comprobación: 187 pruebas en verde, `typecheck`, `lint` y `build` limpios.
 
 ### Qué sigue
 
-**C1 (servicios)**, con el diseño nuevo y sin buffers. B5 (editar las
-plantillas precargadas) sale casi gratis con C1, y B2 (el asistente por pasos)
+**D (trabajadores y horarios)**, empezando por D1 y D2. D2 es urgente para que
+los servicios sirvan: un servicio nuevo no queda asignado a ningún trabajador y
+no se puede reservar hasta que alguien lo preste. B2 (el asistente por pasos)
 une B, C y D, así que se cierra al final.
 
-Después, en orden: D (trabajadores y horarios) → F (reserva pública), que es
-donde el motor de cupos por fin se conecta con la base y `/[slug]` deja de ser
-una vitrina.
+Después: F (reserva pública), que es donde el motor de cupos por fin se conecta
+con la base y `/[slug]` deja de ser una vitrina.
 
 **Pendiente antes de tener dueños reales: la confirmación de correo.** El
 proyecto parece exigir que el dueño confirme su correo, y el servicio de correo
