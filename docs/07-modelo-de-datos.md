@@ -159,13 +159,13 @@ onboarding.
 create table services (
   id                    uuid primary key default gen_random_uuid(),
   business_id           uuid not null references businesses(id) on delete cascade,
-  name                  text not null,
-  description           text,
+  name                  text not null check (char_length(btrim(name)) between 2 and 80),
+  description           text check (description is null or char_length(description) <= 300),
   duration_minutes      int not null check (duration_minutes between 5 and 600),
-  price_cop             bigint not null check (price_cop >= 0),
+  price_cop             bigint not null check (price_cop between 0 and 100000000),
   buffer_before_minutes int not null default 0 check (buffer_before_minutes >= 0),
   buffer_after_minutes  int not null default 0 check (buffer_after_minutes  >= 0),
-  color                 text,
+  color                 text check (color is null or color ~ '^#[0-9a-f]{6}$'),
   category              text,
   display_order         int not null default 0,
   is_active             boolean not null default true,
@@ -175,6 +175,13 @@ create table services (
 
 create index on services (business_id) where is_active;
 ```
+
+**Los buffers están en 0 y nadie los ve** (C2 fuera del MVP): la duración
+incluye todo el tiempo que el servicio necesita. Las columnas se quedan porque
+el motor de cupos las soporta y volver a usarlas no exige migrar.
+
+El color sale de la paleta de `lib/colores.ts`. La base solo exige un hex en
+minúsculas, para que cambiar la paleta no necesite una migración.
 
 ### staff_services
 
@@ -522,7 +529,7 @@ create table service_templates (
   name     text not null,
   duration_minutes int    not null,
   price_cop        bigint not null,
-  buffer_after_minutes int not null default 0,
+  buffer_after_minutes int not null default 0,  -- en 0: ya sumado a la duración (C2)
   display_order int not null default 0,
   unique (category, name)
 );

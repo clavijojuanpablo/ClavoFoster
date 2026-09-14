@@ -25,8 +25,8 @@ quien la hizo.
 | Épica | Tareas | Hechas | Estado |
 |---|---|---|---|
 | A. Fundación técnica | 7 | 7 | **Hecho** |
-| B. Negocio y onboarding | 5 | 3 | En curso |
-| C. Servicios | 2 | 0 | Pendiente |
+| B. Negocio y onboarding | 5 | 4 | En curso |
+| C. Servicios | 2 | 1 | En curso |
 | D. Trabajadores y horarios | 5 | 0 | Pendiente |
 | E. Motor de agendamiento | 5 | 5 | **Hecho** |
 | F. Reserva pública | 6 | 0 | Pendiente |
@@ -35,7 +35,7 @@ quien la hizo.
 | I. Notificaciones | 5 | 0 | Pendiente |
 | J. Suscripciones | 6 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **55** | **15** | |
+| **Total MVP** | **55** | **17** | |
 
 ## Orden de ejecución
 
@@ -131,7 +131,7 @@ despliegue de vista previa. Lo verificado en vivo:
 | B2 | Asistente de onboarding por pasos, salteable y retomable | M | Pendiente |
 | B3 | Selección de slug público con validación de disponibilidad | M | **Hecho** |
 | B4 | Perfil del negocio: dirección con mapa, categoría, fotos, zona horaria | M | **Hecho** |
-| B5 | Plantillas de servicios precargadas por tipo de negocio | S | Pendiente |
+| B5 | Plantillas de servicios precargadas por tipo de negocio | S | **Hecho** |
 
 **B1 — Registro.** Dos pantallas, no una: `/registro` crea la cuenta y
 `/bienvenida` crea el negocio. La razón es técnica: si Supabase exige confirmar
@@ -173,13 +173,18 @@ sugeridos (corte, barba, corte + barba, cejas...) con duración y precio de
 referencia editables. Es una de las tareas con mejor retorno del backlog: ataca
 directamente el abandono en el onboarding.
 
+Cerrada el 2026-09-14 junto con C1: `create_business()` ya creaba los servicios
+de la plantilla, y con C1 el dueño los edita, desactiva o agrega. Cambiar el
+tipo de negocio después del alta **no** vuelve a crear plantillas: el dueño ya
+tiene sus servicios y duplicarlos sería peor.
+
 ---
 
 # Épica C — Servicios
 
 | ID | Tarea | Pri | Estado |
 |---|---|---|---|
-| C1 | CRUD de servicios: nombre, duración, precio, color, descripción | M | Pendiente |
+| C1 | CRUD de servicios: nombre, duración, precio, color, descripción | M | **Hecho** |
 | C2 | Buffer antes y después del servicio | W | Fuera del MVP |
 | C3 | Categorías de servicio y orden de presentación | S | Pendiente |
 
@@ -194,6 +199,24 @@ Lo que queda y no se toca: las columnas `buffer_before_minutes` y
 soportando (probado). Nadie las ve. Al hacer C1, las plantillas que traían
 buffer suman ese tiempo a su duración (Tinte 120 → 135, Sesión pequeña de
 tatuaje 120 → 150...).
+
+**C1 — Servicios.** Cerrada el 2026-09-14. En `/panel/servicios`, solo el dueño:
+lista con pestañas Activos y Desactivados, y un editor (a la derecha en
+escritorio, pantalla propia en celular) con nombre, descripción, duración en
+chips o "Otra", precio, color de la paleta y la vista previa de cómo lo ve el
+cliente.
+
+- **No se borra: se desactiva y se puede reactivar.** Desactivado sale de la
+  página pública; las citas ya agendadas con ese servicio se mantienen.
+- **Cambiar precio o duración no toca las citas existentes** (regla 4).
+- La base repite los límites del formulario: nombre de 2 a 80 caracteres,
+  descripción hasta 300, precio hasta $100.000.000 y color en hex
+  (`20260914130001_servicios.sql`). La misma migración sumó los buffers de
+  plantillas y servicios a su duración.
+- Un servicio nuevo va al final de la lista y **no queda asignado a ningún
+  trabajador**: eso es D2, y hasta entonces no se puede reservar.
+- Quedó fuera a propósito: buscador (un negocio tiene de 5 a 20 servicios),
+  reordenar (C3) y duplicar un servicio.
 
 **Criterio que aplica a todo el backlog:** en cada tarea se construye la versión
 más simple que cumpla el objetivo del negocio, y lo opcional se anota para

@@ -222,8 +222,10 @@ nunca se borra el original.
 ### Servicios, trabajadores y horarios
 
 ```ts
-function upsertService(input: ServiceInput): Promise<Result<Service>>;
-function archiveService(serviceId: string): Promise<Result<{ archived: true }>>;
+// Implementadas en app/(admin)/panel/servicios/actions.ts (C1), con useActionState:
+// reciben el FormData del formulario y, si todo sale bien, redirigen a la lista.
+function guardarServicio(anterior: EstadoServicio, form: FormData): Promise<EstadoServicio>;
+function cambiarEstadoServicio(anterior: EstadoServicio, form: FormData): Promise<EstadoServicio>;
 
 function upsertStaff(input: StaffInput): Promise<Result<Staff>>;
 function setStaffServices(input: { staffId: string; serviceIds: string[] }): Promise<Result<void>>;
@@ -246,7 +248,11 @@ cancelarlas**. La interfaz las muestra y el dueño decide qué hacer con cada un
 Cancelarle citas a alguien automáticamente es exactamente lo que no se debe
 hacer.
 
-`archiveService` desactiva, no borra (regla 5 de `CLAUDE.md`).
+`guardarServicio` crea si el `id` llega vacío y edita si no. El negocio sale
+de la sesión; el `id` del servicio se cruza con ese negocio y RLS lo vuelve a
+exigir. `cambiarEstadoServicio` desactiva o reactiva, nunca borra (regla 5 de
+`CLAUDE.md`). Los errores vuelven como `{ error, campos }` para pintarlos en el
+formulario.
 
 ### Contabilidad
 
