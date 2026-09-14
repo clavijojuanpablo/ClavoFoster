@@ -164,6 +164,22 @@ la máquina de desarrollo. Las consecuencias —sin `db reset` seguro, estado
 compartido, pruebas que pueden fallar por límite de peticiones— están en
 `12-convenciones-de-desarrollo.md`.
 
+**La sesión se verifica con `getClaims()`, no con `getUser()`.** Medido el
+2026-09-14: cada ida y vuelta a Supabase (Montreal, `ca-central-1`) cuesta
+~200 ms desde Colombia, y cada clic del panel hacía cinco seguidas. `getUser()`
+le preguntaba al servidor de Auth dos veces por petición (en `proxy.ts` y en
+`lib/tenant.ts`); `getClaims()` verifica la firma del token con la llave
+pública ES256, que se guarda en memoria 10 minutos. Membresía y negocio salen
+en una sola consulta. `/panel/servicios` pasó de ~1 s a ~0,43 s en local. La
+contracara: una sesión cerrada desde otro dispositivo sigue valiendo hasta que
+vence su token (1 hora). RLS valida ese mismo token en cada consulta.
+
+**Toda sección del panel muestra un esqueleto al instante** (`app/(admin)/panel/loading.tsx`).
+Sin él, la pantalla se quedaba quieta hasta que llegaban los datos. Una sección
+nueva no necesita el suyo; si quiere uno propio, va en su carpeta. Ojo: lo que
+el layout del panel carga con cookies no lo cubre, así que el layout no debe
+sumar consultas lentas.
+
 **`lib/scheduling` no tiene dependencias, ni siquiera de fechas.** La
 conversión de zona horaria son ~35 líneas con `Intl`. Se necesitaba una sola
 operación y no valía la pena arrastrar una librería.
@@ -178,6 +194,7 @@ operación y no valía la pena arrastrar una librería.
 | Un negocio no aparece en su página pública (404) | `is_published` en falso —todo negocio nace oculto y se activa en Perfil del negocio— o `status` en `suspended`/`cancelled`. Es RLS haciendo su trabajo |
 | El despliegue de una rama sale rojo por variables faltantes | Las variables están solo en Production. Marcarlas también en Preview |
 | Un `update` del dueño sobre `businesses` falla con "permission denied" | La columna no tiene `grant update` para `authenticated`. Es a propósito para `status` y `slug`; para una columna nueva, falta el grant |
+| El panel se siente lento en local | Casi todo es red: ~200 ms por consulta hasta Supabase. `next dev` suma ~20% y compila cada ruta la primera vez que se abre. En Vercel (Washington) la base queda cerca, pero la primera visita después de un rato sin uso tarda unos segundos: es la función arrancando en frío |
 | `npm run dev` avisa "Slow filesystem detected" | El proyecto está en un disco mecánico o en una carpeta comprimida o sincronizada. Va en `C:\Proyectos\bookia` (SSD). Ver `12-convenciones-de-desarrollo.md` |
 | `typecheck` falla con `Type '"/panel/..."' does not satisfy the constraint` | Se agregó un `layout.tsx` o una página y los tipos de rutas de Next están viejos. `npx next typegen` |
 | Una sección del menú dice "Pronto" y no abre | Es a propósito: todavía no existe. Se activa en `components/admin/navegacion.ts` al terminar su tarea |
