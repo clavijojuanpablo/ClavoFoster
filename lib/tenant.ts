@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { cache } from 'react';
 
 import { createClient } from '@/lib/supabase/server';
 import type { Tables } from '@/lib/types/database';
@@ -31,6 +32,7 @@ export type NegocioPublico = Pick<
   | 'cover_url'
   | 'brand_color'
   | 'allow_staff_choice'
+  | 'photos'
 >;
 
 export type ContextoNegocio = {
@@ -40,7 +42,7 @@ export type ContextoNegocio = {
 };
 
 const CAMPOS_PUBLICOS =
-  'id, slug, name, category, timezone, phone, address, city, logo_url, cover_url, brand_color, allow_staff_choice';
+  'id, slug, name, category, timezone, phone, address, city, logo_url, cover_url, brand_color, allow_staff_choice, photos';
 
 /**
  * Un slug siempre se guarda en minúsculas, así que /Barberia-Juan y
@@ -57,7 +59,7 @@ export function normalizarSlug(slug: string): string {
  * activa. Esa decisión no está acá: la toma la política de RLS. Este código
  * consulta con la llave publicable y recibe lo que la base le deja ver.
  */
-export async function getNegocioPublico(slug: string): Promise<NegocioPublico | null> {
+export const getNegocioPublico = cache(async (slug: string): Promise<NegocioPublico | null> => {
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -67,15 +69,19 @@ export async function getNegocioPublico(slug: string): Promise<NegocioPublico | 
     .maybeSingle();
 
   return data ?? null;
-}
+});
 
 /**
  * Resuelve el negocio del usuario autenticado, para el panel.
  *
  * Devuelve null si no hay sesión o si el usuario no tiene membresía en ningún
  * negocio.
+ *
+ * Memorizada por petición con `cache`: el layout del panel y la página la
+ * llaman en el mismo render, y sin esto serían dos rondas de consultas.
+ * No cruza peticiones ni usuarios.
  */
-export async function getContextoNegocio(): Promise<ContextoNegocio | null> {
+export const getContextoNegocio = cache(async (): Promise<ContextoNegocio | null> => {
   const supabase = await createClient();
 
   const {
@@ -106,7 +112,7 @@ export async function getContextoNegocio(): Promise<ContextoNegocio | null> {
     rol: membresia.role as Rol,
     staffId: membresia.staff_id,
   };
-}
+});
 
 /**
  * Igual que getContextoNegocio, pero corta el renderizado si no hay sesión o

@@ -184,7 +184,7 @@ describe('create_business', () => {
     });
 
     it('no puede usar un slug que choca con una ruta de la aplicación', async () => {
-      for (const reservado of ['registro', 'bienvenida', 'auth']) {
+      for (const reservado of ['registro', 'bienvenida', 'auth', 'bookia']) {
         const { error } = await comoOtro.rpc('create_business', {
           p_name: 'Ruta',
           p_slug: reservado,

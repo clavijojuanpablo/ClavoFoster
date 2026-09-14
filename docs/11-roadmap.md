@@ -113,6 +113,13 @@ el link directo. Las reseñas de Google son el principal canal de descubrimiento
 de una barbería de barrio; ayudarle con eso es valor real y **prepara el terreno
 del directorio**.
 
+**Tiempo de preparación separado de la duración (buffers).** Salió del MVP el
+2026-09-12 para mantener simple la configuración: hoy el dueño incluye la
+limpieza en la duración del servicio. Volverlo a separar tiene sentido si los
+spas y tatuadores piden que el cliente vea solo el tiempo real de atención. La
+base y el motor de cupos ya lo soportan; faltaría solo la interfaz. Ver C2 en
+`03-backlog.md`.
+
 ---
 
 ## v2 — Expansión

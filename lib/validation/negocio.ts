@@ -29,7 +29,7 @@ export const SLUGS_RESERVADOS: ReadonlySet<string> = new Set([
   'panel', 'cuenta', 'dashboard', 'static', 'assets', 'public', 'soporte',
   'ayuda', 'salir', 'configuracion', 'recuperar', 'cita', 'citas', 'reservar',
   'precios', 'planes', 'terminos', 'privacidad', 'contacto', 'blog',
-  'www', 'mail', 'plataforma',
+  'www', 'mail', 'plataforma', 'bookia',
 ]);
 
 /** Mismo patrón que el CHECK `slug_formato`. */

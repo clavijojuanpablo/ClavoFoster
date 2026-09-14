@@ -140,7 +140,7 @@ export async function buscarDireccion(consulta: string): Promise<BusquedaDirecci
     const respuesta = await fetch(url, {
       headers: {
         // Nominatim exige identificar la aplicación.
-        'User-Agent': `PlataformaCitas/0.1 (${env.NEXT_PUBLIC_APP_URL})`,
+        'User-Agent': `Bookia/0.1 (${env.NEXT_PUBLIC_APP_URL})`,
         'Accept-Language': 'es',
       },
       signal: AbortSignal.timeout(6000),

@@ -13,15 +13,15 @@ export function FormularioRegistro() {
 
   if (estado.enviadoA) {
     return (
-      <div className="space-y-4 text-sm">
-        <p className="rounded-md bg-neutral-100 p-4 dark:bg-neutral-900">
+      <div className="flex flex-col gap-4 text-sm">
+        <p className="rounded-2xl bg-lima p-4 text-[15px] text-tinta">
           Te mandamos un enlace a <strong>{estado.enviadoA}</strong>. Ábrelo para
           confirmar tu correo y seguir configurando tu negocio.
         </p>
-        <p className="text-neutral-600 dark:text-neutral-400">
+        <p className="text-muted-foreground">
           ¿No llega? Revisa la carpeta de spam. Si ya tenías cuenta con ese
           correo,{' '}
-          <Link href="/login" className="underline underline-offset-2">
+          <Link href="/login" className="font-semibold text-tinta underline underline-offset-4">
             entra con tu contraseña
           </Link>
           .
@@ -34,7 +34,7 @@ export function FormularioRegistro() {
   // se reinicia al volver del servidor, y hacerle reescribir todo por un celular
   // mal escrito es la forma más rápida de que abandone.
   return (
-    <form action={accion} className="space-y-4" noValidate>
+    <form action={accion} className="flex flex-col gap-4" noValidate>
       <Campo
         name="nombreNegocio"
         etiqueta="Nombre del negocio"
@@ -82,9 +82,9 @@ export function FormularioRegistro() {
         {enviando ? 'Creando cuenta…' : 'Crear cuenta'}
       </button>
 
-      <p className="text-center text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="text-center text-sm text-muted-foreground">
         ¿Ya tienes cuenta?{' '}
-        <Link href="/login" className="underline underline-offset-2">
+        <Link href="/login" className="font-semibold text-tinta underline underline-offset-4">
           Entra
         </Link>
       </p>

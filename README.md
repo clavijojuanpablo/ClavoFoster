@@ -1,6 +1,6 @@
-# Plataforma de agendamiento para negocios de belleza y salud
+# Bookia
 
-SaaS multi-tenant que le permite a barberías, peluquerías, spas, tatuadores y
+Agendamiento para negocios de belleza y salud en Colombia. SaaS multi-tenant que le permite a barberías, peluquerías, spas, tatuadores y
 centros de cosmetología administrar su agenda, sus trabajadores y su
 contabilidad — y a sus clientes reservar citas desde el navegador, sin instalar
 nada.
@@ -9,8 +9,8 @@ Un solo producto, vendido a muchos negocios, sin instalaciones personalizadas.
 
 ## Estado
 
-**En construcción. Épicas A (fundación) y E (motor de agendamiento) completas —
-11 de 55 tareas del MVP.** Lo siguiente es la épica B, negocio y onboarding.
+**En construcción — 14 de 55 tareas del MVP.** El detalle y lo que sigue están en
+[`docs/14-estado-actual.md`](./docs/14-estado-actual.md).
 
 Demostración en vivo: **https://clavo-foster-5lt7.vercel.app** — apunta al
 proyecto de *desarrollo* de Supabase, no sirve para negocios reales. Ver
