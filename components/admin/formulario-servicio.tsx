@@ -8,6 +8,7 @@ import { AvisoError, Campo, CLASES_CONTROL } from '@/components/admin/campo';
 import { Button } from '@/components/ui/button';
 import { COLORES_SERVICIO } from '@/lib/colores';
 import { duracion as textoDuracion, pesos } from '@/lib/formato';
+import { enviarSinReiniciar } from '@/lib/formularios';
 import { cn } from '@/lib/utils';
 import {
   DESCRIPCION_MAX,
@@ -61,7 +62,7 @@ export function FormularioServicio({ inicial }: { inicial: ServicioInicial }) {
   }
 
   return (
-    <form action={guardar} noValidate className="flex flex-1 flex-col">
+    <form onSubmit={enviarSinReiniciar(guardar, { estado: cambiarEstado })} noValidate className="flex flex-1 flex-col">
       <input type="hidden" name="id" value={inicial.id ?? ''} />
 
       <div className="flex flex-col gap-5 p-[18px] lg:px-6 lg:py-5">
@@ -232,7 +233,7 @@ export function FormularioServicio({ inicial }: { inicial: ServicioInicial }) {
         {/* En celular va al final del formulario: la barra fija solo lleva Guardar. */}
         {inicial.id && (
           <div className="flex flex-col items-start gap-1 border-t border-linea pt-4 sm:hidden">
-            <BotonEstado activo={inicial.activo} accion={cambiarEstado} cambiando={cambiando} disabled={ocupado} />
+            <BotonEstado activo={inicial.activo} cambiando={cambiando} disabled={ocupado} />
             {inicial.activo && (
               <p className="text-[13px] text-muted-foreground">
                 Deja de aparecer en tu página. Las citas ya agendadas se mantienen.
@@ -251,7 +252,7 @@ export function FormularioServicio({ inicial }: { inicial: ServicioInicial }) {
       <div className="sticky bottom-[calc(96px+env(safe-area-inset-bottom))] mt-auto flex items-center justify-between gap-2 rounded-b-[20px] border-t border-linea bg-card px-[18px] py-3 lg:bottom-0 lg:px-6 lg:py-4">
         {inicial.id ? (
           <span className="hidden sm:block">
-            <BotonEstado activo={inicial.activo} accion={cambiarEstado} cambiando={cambiando} disabled={ocupado} />
+            <BotonEstado activo={inicial.activo} cambiando={cambiando} disabled={ocupado} />
           </span>
         ) : (
           <span className="hidden sm:block" />
@@ -266,17 +267,15 @@ export function FormularioServicio({ inicial }: { inicial: ServicioInicial }) {
 
 function BotonEstado({
   activo,
-  accion,
   cambiando,
   disabled,
 }: {
   activo: boolean;
-  accion: (formData: FormData) => void;
   cambiando: boolean;
   disabled: boolean;
 }) {
   return (
-    <Button type="submit" variant={activo ? 'destructive' : 'outline'} formAction={accion} disabled={disabled}>
+    <Button type="submit" variant={activo ? 'destructive' : 'outline'} data-accion="estado" disabled={disabled}>
       {cambiando ? 'Un momento…' : activo ? 'Desactivar servicio' : 'Reactivar servicio'}
     </Button>
   );
