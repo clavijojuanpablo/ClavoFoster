@@ -49,6 +49,9 @@ export default async function NegocioPage({ params }: Props) {
       .from('services')
       .select('id, name, description, duration_minutes, price_cop')
       .eq('business_id', negocio.id)
+      // RLS ya oculta los desactivados al público, pero el dueño con sesión sí
+      // los puede leer, y viendo su propia página no debe encontrarlos.
+      .eq('is_active', true)
       .order('display_order'),
     supabase
       .from('staff')
