@@ -40,10 +40,10 @@ export async function refrescarSesion(request: NextRequest) {
     },
   );
 
-  // getUser() revalida el token contra Supabase. Es lo que dispara el refresco.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() renueva el token si venció (eso escribe las cookies nuevas) y
+  // verifica su firma con la llave pública, sin llamar a Supabase en cada
+  // petición. Ver getUsuarioId() en lib/tenant.ts.
+  const { data } = await supabase.auth.getClaims();
 
-  return { response, user };
+  return { response, user: data?.claims.sub ? { id: data.claims.sub } : null };
 }

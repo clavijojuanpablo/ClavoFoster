@@ -82,36 +82,42 @@ export const getNegocioPublico = cache(async (slug: string): Promise<NegocioPubl
  * No cruza peticiones ni usuarios.
  */
 export const getContextoNegocio = cache(async (): Promise<ContextoNegocio | null> => {
+  const userId = await getUsuarioId();
+  if (!userId) return null;
+
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return null;
-
-  // Se lee la membresía del propio usuario: RLS solo devuelve las suyas.
+  // Membresía y negocio en una sola consulta: cada ida y vuelta a la base se
+  // paga en cada clic del panel. RLS solo devuelve las membresías del propio
+  // usuario y el negocio al que pertenece.
   const { data: membresia } = await supabase
     .from('memberships')
-    .select('role, staff_id, business_id')
-    .eq('user_id', user.id)
+    .select('role, staff_id, businesses(*)')
+    .eq('user_id', userId)
     .maybeSingle();
 
-  if (!membresia) return null;
-
-  const { data: negocio } = await supabase
-    .from('businesses')
-    .select('*')
-    .eq('id', membresia.business_id)
-    .maybeSingle();
-
-  if (!negocio) return null;
+  if (!membresia?.businesses) return null;
 
   return {
-    negocio,
+    negocio: membresia.businesses,
     rol: membresia.role as Rol,
     staffId: membresia.staff_id,
   };
+});
+
+/**
+ * El id del usuario de la sesión, o null.
+ *
+ * getClaims() verifica la firma del token con la llave pública del proyecto
+ * (ES256) sin llamar a Supabase; getUser() hacía una petición al servidor de
+ * Auth en cada render. La contracara: una sesión cerrada desde otro lado sigue
+ * valiendo hasta que su token vence (1 hora). No abre datos de más: RLS valida
+ * el mismo token en cada consulta.
+ */
+const getUsuarioId = cache(async (): Promise<string | null> => {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  return data?.claims.sub ?? null;
 });
 
 /**
@@ -122,13 +128,8 @@ export async function requireNegocio(): Promise<ContextoNegocio> {
   const contexto = await getContextoNegocio();
 
   if (!contexto) {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
     // Con sesión pero sin negocio: le falta terminar el registro (tarea B1).
-    redirect(user ? '/bienvenida' : '/login');
+    redirect((await getUsuarioId()) ? '/bienvenida' : '/login');
   }
 
   return contexto;
