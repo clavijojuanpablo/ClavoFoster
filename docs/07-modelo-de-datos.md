@@ -132,10 +132,10 @@ Definida en `05-arquitectura-multitenant.md`. Resuelve permisos por la pareja
 create table staff (
   id            uuid primary key default gen_random_uuid(),
   business_id   uuid not null references businesses(id) on delete cascade,
-  name          text not null,
-  photo_url     text,
-  phone         text,
-  bio           text,
+  name          text not null check (char_length(btrim(name)) between 2 and 80),
+  photo_url     text,   -- RUTA en el bucket, no URL: <business_id>/equipo/<uuid>.jpg
+  phone         text check (phone is null or phone ~ '^\+[1-9][0-9]{7,14}$'),
+  bio           text check (bio is null or char_length(bio) <= 300),
   can_block_own_schedule boolean not null default true,
   commission_pct numeric(5,2),          -- v1.1
   display_order int not null default 0,
@@ -146,6 +146,10 @@ create table staff (
 
 create index on staff (business_id) where is_active;
 ```
+
+`photo_url` guarda una ruta dentro de `business-photos`, igual que
+`businesses.photos`, y un CHECK exige que esté en la carpeta del propio negocio.
+El nombre de la columna quedó de antes; la URL la arma `urlDeFoto()`.
 
 Un trabajador **no necesita usuario** para existir. El dueño puede cargar a sus
 cuatro barberos y agendarlos sin que ninguno tenga cuenta. La invitación por
@@ -186,6 +190,12 @@ minúsculas, para que cambiar la paleta no necesite una migración.
 ### staff_services
 
 Qué presta cada quién. Sin fila, ese trabajador no aparece para ese servicio.
+
+**Trabajador y servicio tienen que ser del mismo negocio que la fila.** Lo
+exigen dos llaves foráneas compuestas, `(staff_id, business_id)` y
+`(service_id, business_id)`, sobre `unique (id, business_id)` en `staff` y
+`services`. La política de RLS solo mira el `business_id` de la fila: sin las
+llaves, un dueño podía enlazar su servicio con el trabajador de otro negocio.
 
 ```sql
 create table staff_services (

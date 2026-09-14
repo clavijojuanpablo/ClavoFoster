@@ -57,6 +57,8 @@ export default async function NegocioPage({ params }: Props) {
       .from('staff')
       .select('id, name, bio, photo_url')
       .eq('business_id', negocio.id)
+      // Igual que con los servicios: el dueño con sesión también lee a los desactivados.
+      .eq('is_active', true)
       .order('display_order'),
   ]);
 
@@ -138,8 +140,8 @@ export default async function NegocioPage({ params }: Props) {
                 {trabajadores.map((t) => (
                   <li key={t.id} className="flex flex-col items-center gap-2 rounded-[18px] border border-border bg-card px-1 py-3">
                     {t.photo_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- foto de perfil pequeña ya alojada en Storage
-                      <img src={t.photo_url} alt="" className="size-12 rounded-full object-cover" />
+                      // eslint-disable-next-line @next/next/no-img-element -- foto de perfil pequeña, ya reducida al subirla
+                      <img src={urlDeFoto(t.photo_url)} alt="" className="size-12 rounded-full object-cover" />
                     ) : (
                       <span className="flex size-12 items-center justify-center rounded-full bg-muted font-bold">
                         {iniciales(t.name)}
