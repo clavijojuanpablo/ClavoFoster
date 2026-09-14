@@ -49,10 +49,10 @@ export function FormularioAltaNegocio({ nombreInicial, celularInicial, dominio }
   };
 
   return (
-    <form action={accion} className="space-y-6" noValidate>
+    <form action={accion} className="flex flex-col gap-6" noValidate>
       <fieldset>
-        <legend className="text-sm font-medium">¿Qué tipo de negocio es?</legend>
-        <p className="mt-1 text-xs text-neutral-500">
+        <legend className="text-sm font-semibold">¿Qué tipo de negocio es?</legend>
+        <p className="mt-1 text-[13px] text-muted-foreground">
           Con esto te dejamos cargados servicios típicos con precios de referencia. Los ajustas
           después.
         </p>
@@ -60,7 +60,7 @@ export function FormularioAltaNegocio({ nombreInicial, celularInicial, dominio }
           {CATEGORIAS.map((c) => (
             <label
               key={c.valor}
-              className="flex cursor-pointer items-center gap-2 rounded-md border border-neutral-300 px-3 py-2.5 text-sm has-checked:border-neutral-900 has-checked:bg-neutral-100 dark:border-neutral-700 dark:has-checked:border-neutral-300 dark:has-checked:bg-neutral-900"
+              className="flex h-12 cursor-pointer items-center gap-2.5 rounded-xl border border-input bg-card px-3.5 text-[15px] transition hover:border-tinta has-checked:border-tinta has-checked:bg-tinta has-checked:font-semibold has-checked:text-white has-focus-visible:ring-4 has-focus-visible:ring-lima/40"
             >
               <input
                 type="radio"
@@ -68,14 +68,14 @@ export function FormularioAltaNegocio({ nombreInicial, celularInicial, dominio }
                 value={c.valor}
                 required
                 defaultChecked={estado.valores.categoria === c.valor}
-                className="accent-neutral-900"
+                className="sr-only"
               />
               {c.nombre}
             </label>
           ))}
         </div>
         {estado.campos.categoria && (
-          <p className="mt-1 text-xs text-red-600">{estado.campos.categoria}</p>
+          <p className="mt-1.5 text-[13px] text-destructive">{estado.campos.categoria}</p>
         )}
       </fieldset>
 
@@ -92,12 +92,12 @@ export function FormularioAltaNegocio({ nombreInicial, celularInicial, dominio }
         error={estado.campos.nombreNegocio}
       />
 
-      <div>
-        <label htmlFor="slug" className="block text-sm font-medium">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="slug" className="text-sm font-semibold">
           Tu link para reservar
         </label>
-        <div className="mt-1 flex items-stretch">
-          <span className="flex max-w-[45%] items-center truncate rounded-l-md border border-r-0 border-neutral-300 bg-neutral-100 px-2 text-xs text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900">
+        <div className="flex h-12 items-stretch overflow-hidden rounded-xl border border-input bg-card transition focus-within:border-tinta focus-within:ring-4 focus-within:ring-lima/40 has-aria-invalid:border-destructive">
+          <span className="flex max-w-[48%] items-center truncate border-r border-input bg-muted px-3 text-[13px] text-muted-foreground">
             {dominio}/
           </span>
           <input
@@ -116,10 +116,10 @@ export function FormularioAltaNegocio({ nombreInicial, celularInicial, dominio }
                 : undefined
             }
             aria-describedby="slug-ayuda"
-            className="w-full min-w-0 rounded-r-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900 aria-invalid:border-red-500 dark:border-neutral-700 dark:bg-neutral-950 dark:focus:border-neutral-400"
+            className="w-full min-w-0 bg-transparent px-3 text-[15px] font-semibold outline-none"
           />
         </div>
-        <div id="slug-ayuda" aria-live="polite" className="mt-1 text-xs">
+        <div id="slug-ayuda" aria-live="polite" className="text-[13px]">
           <EstadoSlug
             slug={slug}
             errorEnvio={errorEnvioSlug}
@@ -195,22 +195,25 @@ function EstadoSlug({
   disponibilidad: DisponibilidadSlug | null;
   onUsar: (slug: string) => void;
 }) {
-  if (errorEnvio) return <p className="text-red-600">{errorEnvio}</p>;
+  if (errorEnvio) return <p className="text-destructive">{errorEnvio}</p>;
 
   if (!slug) {
-    return <p className="text-neutral-500">Es el que vas a poner en tu Instagram y tu WhatsApp.</p>;
+    return <p className="text-muted-foreground">Es el que vas a poner en tu Instagram y tu WhatsApp.</p>;
   }
 
-  if (!disponibilidad) return <p className="text-neutral-500">Revisando si está libre…</p>;
+  if (!disponibilidad) return <p className="text-muted-foreground">Revisando si está libre…</p>;
 
   switch (disponibilidad.estado) {
     case 'disponible':
-      return <p className="text-green-700 dark:text-green-500">Está libre. Es tuyo si lo quieres.</p>;
+      return <p className="flex items-center gap-1.5 font-semibold text-estado-neutro">
+          <span className="size-2 rounded-full bg-[#1e9e8c]" aria-hidden="true" />
+          Está libre. Es tuyo si lo quieres.
+        </p>;
     case 'invalido':
-      return <p className="text-red-600">{disponibilidad.mensaje}</p>;
+      return <p className="text-destructive">{disponibilidad.mensaje}</p>;
     case 'tomado':
       return (
-        <p className="text-red-600">
+        <p className="text-destructive">
           Ya lo tiene otro negocio.
           {disponibilidad.sugerencia && (
             <>
@@ -218,7 +221,7 @@ function EstadoSlug({
               <button
                 type="button"
                 onClick={() => onUsar(disponibilidad.sugerencia!)}
-                className="font-medium text-neutral-900 underline underline-offset-2 dark:text-neutral-100"
+                className="font-semibold text-tinta underline underline-offset-4"
               >
                 Usar {disponibilidad.sugerencia}
               </button>
@@ -227,6 +230,6 @@ function EstadoSlug({
         </p>
       );
     case 'desconocido':
-      return <p className="text-neutral-500">Es el que vas a poner en tu Instagram y tu WhatsApp.</p>;
+      return <p className="text-muted-foreground">Es el que vas a poner en tu Instagram y tu WhatsApp.</p>;
   }
 }

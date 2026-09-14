@@ -1,6 +1,5 @@
-import Link from 'next/link';
-
 import { FormularioPerfil } from '@/components/admin/formulario-perfil';
+import { env } from '@/lib/env';
 import { requireDueno } from '@/lib/tenant';
 import { ZONA_HORARIA_POR_DEFECTO, zonasHorariasDisponibles } from '@/lib/validation/perfil';
 
@@ -25,18 +24,11 @@ export default async function PerfilNegocioPage() {
   if (!zonas.includes(negocio.timezone)) zonas.unshift(negocio.timezone);
 
   return (
-    <main className="mx-auto max-w-xl px-6 pt-12">
-      <Link href="/panel" className="text-sm text-neutral-500 underline-offset-2 hover:underline">
-        ← Volver al panel
-      </Link>
-      <h1 className="mt-4 text-xl font-semibold">Perfil del negocio</h1>
-      <p className="mt-1 mb-8 text-sm text-neutral-600 dark:text-neutral-400">
-        Tu link público es{' '}
-        <Link href={`/${negocio.slug}`} className="underline underline-offset-2">
-          /{negocio.slug}
-        </Link>
-        .
-      </p>
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-5 lg:px-8 lg:pt-7">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-[26px] leading-tight font-bold lg:text-[32px]">Perfil del negocio</h1>
+        <p className="text-sm text-muted-foreground">Lo que ven tus clientes y dónde te encuentran.</p>
+      </header>
 
       <FormularioPerfil
         zonasHorarias={zonas}
@@ -47,6 +39,7 @@ export default async function PerfilNegocioPage() {
           celular: negocio.phone ?? '',
           publicada: negocio.is_published,
           slug: negocio.slug,
+          urlPublica: `${env.NEXT_PUBLIC_APP_URL}/${negocio.slug}`,
           direccion: negocio.address ?? '',
           ciudad: negocio.city ?? '',
           latitud: negocio.latitude === null ? null : Number(negocio.latitude),

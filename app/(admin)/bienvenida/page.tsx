@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { FormularioAltaNegocio } from '@/components/admin/formulario-alta-negocio';
+import { MarcoAcceso } from '@/components/admin/marco-acceso';
 import { env } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 import { getContextoNegocio } from '@/lib/tenant';
@@ -32,17 +33,15 @@ export default async function BienvenidaPage() {
   const celular = typeof metadatos.celular === 'string' ? metadatos.celular : '';
 
   return (
-    <main className="mx-auto max-w-md px-6 py-12">
-      <h1 className="text-xl font-semibold">Ya casi</h1>
-      <p className="mt-1 mb-8 text-sm text-neutral-600 dark:text-neutral-400">
-        Dos datos más y tu negocio queda creado. Todo lo demás lo puedes completar después.
-      </p>
-
+    <MarcoAcceso
+      titulo="Ya casi"
+      descripcion="Dos datos más y tu negocio queda creado. Todo lo demás lo puedes completar después."
+    >
       <FormularioAltaNegocio
         nombreInicial={nombre}
         celularInicial={celular}
         dominio={new URL(env.NEXT_PUBLIC_APP_URL).host}
       />
-    </main>
+    </MarcoAcceso>
   );
 }

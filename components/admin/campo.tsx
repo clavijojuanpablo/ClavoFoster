@@ -1,7 +1,11 @@
 import type { InputHTMLAttributes, ReactNode } from 'react';
 
-const CLASES_INPUT =
-  'w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900 aria-invalid:border-red-500 dark:border-neutral-700 dark:bg-neutral-950 dark:focus:border-neutral-400';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+
+/** Borde, alto y foco de todo control de formulario. Se reutiliza en selects e inputs a medida. */
+export const CLASES_CONTROL =
+  'h-12 w-full rounded-xl border border-input bg-card px-3.5 text-[15px] text-tinta outline-none transition placeholder:text-tenue focus:border-tinta focus:ring-4 focus:ring-lima/40 aria-invalid:border-destructive aria-invalid:focus:ring-estado-mal-fondo disabled:opacity-60';
 
 type Props = InputHTMLAttributes<HTMLInputElement> & {
   name: string;
@@ -11,14 +15,14 @@ type Props = InputHTMLAttributes<HTMLInputElement> & {
 };
 
 /** Input con etiqueta, ayuda y error, enlazados para lectores de pantalla. */
-export function Campo({ name, etiqueta, error, ayuda, id, ...props }: Props) {
+export function Campo({ name, etiqueta, error, ayuda, id, className, ...props }: Props) {
   const idInput = id ?? name;
   const idError = `${idInput}-error`;
   const idAyuda = `${idInput}-ayuda`;
 
   return (
-    <div>
-      <label htmlFor={idInput} className="block text-sm font-medium">
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={idInput} className="text-sm font-semibold">
         {etiqueta}
       </label>
       <input
@@ -26,16 +30,16 @@ export function Campo({ name, etiqueta, error, ayuda, id, ...props }: Props) {
         name={name}
         aria-invalid={error ? true : undefined}
         aria-describedby={[error && idError, ayuda && idAyuda].filter(Boolean).join(' ') || undefined}
-        className={`mt-1 ${CLASES_INPUT}`}
+        className={cn(CLASES_CONTROL, className)}
         {...props}
       />
       {ayuda && !error && (
-        <p id={idAyuda} className="mt-1 text-xs text-neutral-500">
+        <p id={idAyuda} className="text-[13px] text-muted-foreground">
           {ayuda}
         </p>
       )}
       {error && (
-        <p id={idError} className="mt-1 text-xs text-red-600">
+        <p id={idError} className="text-[13px] text-destructive">
           {error}
         </p>
       )}
@@ -45,11 +49,10 @@ export function Campo({ name, etiqueta, error, ayuda, id, ...props }: Props) {
 
 export function AvisoError({ children }: { children: ReactNode }) {
   return (
-    <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+    <p role="alert" className="rounded-xl bg-estado-mal-fondo px-4 py-3 text-sm text-estado-mal">
       {children}
     </p>
   );
 }
 
-export const CLASES_BOTON_PRIMARIO =
-  'w-full rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:opacity-50 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200';
+export const CLASES_BOTON_PRIMARIO = buttonVariants({ size: 'lg', className: 'w-full' });

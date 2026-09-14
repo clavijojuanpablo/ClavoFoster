@@ -24,9 +24,9 @@ quien la hizo.
 
 | Épica | Tareas | Hechas | Estado |
 |---|---|---|---|
-| A. Fundación técnica | 6 | 6 | **Hecho** |
+| A. Fundación técnica | 7 | 6 | En curso |
 | B. Negocio y onboarding | 5 | 3 | En curso |
-| C. Servicios | 3 | 0 | Pendiente |
+| C. Servicios | 2 | 0 | Pendiente |
 | D. Trabajadores y horarios | 5 | 0 | Pendiente |
 | E. Motor de agendamiento | 5 | 5 | **Hecho** |
 | F. Reserva pública | 6 | 0 | Pendiente |
@@ -72,6 +72,14 @@ una demo por consola que ya convence a un dueño de barbería.
 | A4 | Resolución de tenant por slug y por sesión | M | **Hecho** |
 | A5 | Autenticación de dueño y trabajador (email + contraseña) | M | **Hecho** |
 | A6 | Despliegue en Vercel con entornos de desarrollo y producción | M | **Hecho** |
+| A7 | Sistema de diseño, menú responsive y pantallas existentes con el nuevo estilo | M | En revisión |
+
+**A7 — Sistema de diseño.** Se adelantó antes de la épica C para no construir
+las pantallas de servicios, equipo y calendario con un estilo que habría que
+rehacer. Detalle en `15-sistema-de-diseno.md`. Incluye: tokens de color y
+tipografía, botón/tarjeta/campo, menú lateral en escritorio y barra inferior con
+hoja "Más" en celular, y el Inicio del panel con datos reales (citas de hoy,
+siguiente cita, caja del día y el recordatorio "Completa tu negocio").
 
 **A3 — Esquema base y RLS.** Criterios de aceptación:
 - Toda tabla de negocio tiene `tenant_id` y RLS activa.
@@ -167,16 +175,24 @@ directamente el abandono en el onboarding.
 | ID | Tarea | Pri | Estado |
 |---|---|---|---|
 | C1 | CRUD de servicios: nombre, duración, precio, color, descripción | M | Pendiente |
-| C2 | Buffer antes y después del servicio | M | Pendiente |
+| C2 | Buffer antes y después del servicio | W | Fuera del MVP |
 | C3 | Categorías de servicio y orden de presentación | S | Pendiente |
 
-**C2 — Buffer.** Tiempo de limpieza o preparación que se reserva pero no se le
-cobra ni se le muestra al cliente. Un spa necesita 15 minutos entre masajes; un
-tatuador necesita más. Sin esto, el motor agenda pegado y la operación real no
-da. Criterios:
-- `buffer_before_minutes` y `buffer_after_minutes` por servicio.
-- El motor de cupos los respeta al calcular disponibilidad.
-- El cliente ve solo la duración del servicio, no el buffer.
+**C2 — Buffer. Fuera del MVP (decidido 2026-09-12).** Un tiempo de limpieza
+aparte de la duración es un concepto más que el dueño tiene que entender y
+configurar. Para el MVP, **la duración del servicio incluye todo el tiempo que
+necesita**: un masaje de 60 minutos con 15 de preparación se configura de 75. El
+formulario de servicios lo dice en pantalla.
+
+Lo que queda y no se toca: las columnas `buffer_before_minutes` y
+`buffer_after_minutes` siguen en la base en 0, y el motor de cupos las sigue
+soportando (probado). Nadie las ve. Al hacer C1, las plantillas que traían
+buffer suman ese tiempo a su duración (Tinte 120 → 135, Sesión pequeña de
+tatuaje 120 → 150...).
+
+**Criterio que aplica a todo el backlog:** en cada tarea se construye la versión
+más simple que cumpla el objetivo del negocio, y lo opcional se anota para
+después en vez de construirse.
 
 **Nota de implementación:** los servicios no se borran, se desactivan
 (`is_active = false`). Un servicio borrado con citas históricas rompe la

@@ -1,5 +1,6 @@
 'use client';
 
+import { ImagePlus, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import { BUCKET_FOTOS, urlDeFoto } from '@/lib/fotos';
@@ -97,43 +98,43 @@ export function FotosNegocio({ businessId, fotos, onCambio }: Props) {
 
   return (
     <div>
-      {fotos.length > 0 && (
-        <ul className="mb-3 grid grid-cols-3 gap-2">
-          {fotos.map((ruta) => (
-            <li key={ruta} className="relative aspect-square overflow-hidden rounded-md bg-neutral-100 dark:bg-neutral-900">
-              {/* <img> y no next/image: ya llegan reducidas, y pasarlas por la
-                  optimización de Vercel cobraría dos veces por lo mismo. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={urlDeFoto(ruta)} alt="" className="size-full object-cover" loading="lazy" />
-              <button
-                type="button"
-                onClick={() => onCambio(fotos.filter((f) => f !== ruta))}
-                className="absolute top-1 right-1 flex size-7 items-center justify-center rounded-full bg-black/70 text-sm text-white"
-                aria-label="Quitar foto"
-              >
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+        {fotos.map((ruta) => (
+          <li key={ruta} className="relative aspect-square overflow-hidden rounded-[14px] bg-muted">
+            {/* <img> y no next/image: ya llegan reducidas, y pasarlas por la
+                optimización de Vercel cobraría dos veces por lo mismo. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={urlDeFoto(ruta)} alt="" className="size-full object-cover" loading="lazy" />
+            <button
+              type="button"
+              onClick={() => onCambio(fotos.filter((f) => f !== ruta))}
+              className="absolute top-1.5 right-1.5 flex size-7 items-center justify-center rounded-full bg-tinta/75 text-white transition hover:bg-tinta"
+              aria-label="Quitar foto"
+            >
+              <X className="size-3.5" strokeWidth={3} />
+            </button>
+          </li>
+        ))}
 
-      {espacio > 0 && (
-        <label className="flex cursor-pointer items-center justify-center rounded-md border border-dashed border-neutral-300 px-3 py-4 text-sm text-neutral-600 has-disabled:cursor-wait has-disabled:opacity-60 dark:border-neutral-700 dark:text-neutral-400">
-          <input
-            ref={input}
-            type="file"
-            accept="image/*"
-            multiple
-            disabled={subiendo > 0}
-            onChange={(e) => subir(e.target.files)}
-            className="sr-only"
-          />
-          {subiendo > 0 ? `Subiendo ${subiendo} foto${subiendo === 1 ? '' : 's'}…` : 'Agregar fotos del local'}
-        </label>
-      )}
-
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        {espacio > 0 && (
+          <li>
+            <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-[14px] border-[1.5px] border-dashed border-[#bdbab0] text-[13px] font-semibold text-muted-foreground transition hover:border-tinta hover:text-tinta has-disabled:cursor-wait has-disabled:opacity-60 has-focus-visible:ring-4 has-focus-visible:ring-lima/40">
+              <input
+                ref={input}
+                type="file"
+                accept="image/*"
+                multiple
+                disabled={subiendo > 0}
+                onChange={(e) => subir(e.target.files)}
+                className="sr-only"
+              />
+              <ImagePlus className="size-[22px]" strokeWidth={1.8} />
+              {subiendo > 0 ? `Subiendo ${subiendo}…` : 'Agregar'}
+            </label>
+          </li>
+        )}
+      </ul>
+      {error && <p className="mt-2 text-[13px] text-destructive">{error}</p>}
     </div>
   );
 }

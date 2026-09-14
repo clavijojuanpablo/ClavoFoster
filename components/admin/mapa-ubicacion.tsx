@@ -31,7 +31,7 @@ const ZOOM_CALLE = 17;
 // rutas relativas que el empaquetador de Next no resuelve.
 const ICONO_PIN = L.divIcon({
   className: '',
-  html: '<div style="width:22px;height:22px;border-radius:50% 50% 50% 0;background:#171717;border:3px solid #fff;transform:rotate(-45deg);box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>',
+  html: '<div style="width:22px;height:22px;border-radius:50% 50% 50% 0;background:#121412;border:3px solid #fff;transform:rotate(-45deg);box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>',
   iconSize: [22, 22],
   iconAnchor: [11, 22],
 });
@@ -106,7 +106,7 @@ export default function MapaUbicacion({ latitud, longitud, onCambio }: Props) {
   return (
     <div
       ref={contenedor}
-      className="h-64 w-full overflow-hidden rounded-md border border-neutral-300 dark:border-neutral-700"
+      className="isolate h-64 w-full overflow-hidden rounded-2xl bg-muted lg:h-72"
       role="application"
       aria-label="Mapa: toca o arrastra el pin hasta la puerta de tu local"
     />

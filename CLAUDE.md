@@ -128,6 +128,7 @@ Detalle completo, incluida la definición de terminado:
 | `docs/12-convenciones-de-desarrollo.md` | Cómo se trabaja en este repositorio |
 | `docs/13-contratos-de-api.md` | Firma de cada endpoint y Server Action |
 | `docs/14-estado-actual.md` | **Dónde vamos y cómo retomar. Empieza acá.** |
+| `docs/15-sistema-de-diseno.md` | Colores, tipografía, componentes y menú |
 | `docs/adr/` | Decisiones de arquitectura y por qué se tomaron |
 
 ## Advertencias para quien escriba código aquí
