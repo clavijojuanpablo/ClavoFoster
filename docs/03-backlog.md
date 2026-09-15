@@ -295,6 +295,9 @@ con "Quitar".
 - Los días completos van de medianoche a medianoche local e incluyen el último
   día; un día con cambio de horario dura lo que de verdad dura.
 - Quitar un bloqueo lo borra: no es información contable.
+- **El almuerzo de todos los días no es un bloqueo:** va en el horario (D3), como
+  turno partido. Ausencias es para lo que pasa una vez; la pantalla lo aclara y
+  enlaza al equipo.
 - **Solo el dueño, por ahora.** Que el trabajador bloquee su propio tiempo
   (`can_block_own_schedule`, flujo 5) llega con D5, cuando el trabajador tenga
   acceso al panel.

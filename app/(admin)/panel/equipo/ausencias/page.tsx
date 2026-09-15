@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarOff, Store } from 'lucide-react';
+import { ArrowLeft, CalendarOff, Clock, Store } from 'lucide-react';
 import Link from 'next/link';
 
 import { quitarBloqueo } from '@/app/(admin)/panel/equipo/ausencias/actions';
@@ -40,6 +40,18 @@ export default async function AusenciasPage() {
           Vacaciones, una cita médica o un festivo. En esos ratos no se ofrecen cupos.
         </p>
       </header>
+
+      {/* Lo que se repite cada semana no es una ausencia: vive en el horario. */}
+      <p className="flex items-start gap-3 rounded-2xl border border-dashed border-input px-4 py-3.5 text-sm text-muted-foreground">
+        <Clock className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+        <span>
+          ¿Almuerzo o descanso de todos los días? No lo bloquees aquí: en{' '}
+          <Link href="/panel/equipo" className="font-semibold text-tinta underline underline-offset-4">
+            Equipo
+          </Link>
+          , abre a la persona y en su Horario divide el día en dos turnos (por ejemplo, 9:00 a 13:00 y 14:00 a 19:00).
+        </span>
+      </p>
 
       <FormularioBloqueo personas={personas} timezone={tz} hoy={fechaLocal(tz, ahora)} />
 
