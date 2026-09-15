@@ -69,8 +69,8 @@ beforeAll(async () => {
   const { data: s } = await admin
     .from('staff')
     .insert([
-      { business_id: businessId, name: 'A' },
-      { business_id: businessId, name: 'B' },
+      { business_id: businessId, name: 'Trabajador A' },
+      { business_id: businessId, name: 'Trabajador B' },
     ])
     .select('id');
   staffA = s![0].id;
