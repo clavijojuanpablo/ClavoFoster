@@ -131,3 +131,14 @@ export function minutosDesdeMedianocheLocal(timezone: string, instante: Date): n
 
   return (v.hour === 24 ? 0 : v.hour) * 60 + v.minute;
 }
+
+/** Fecha local 'YYYY-MM-DD' de un instante en la zona del negocio. */
+export function fechaLocalDe(timezone: string, instante: Date): string {
+  const partes = formateador(timezone).formatToParts(instante);
+  const v: Record<string, string> = {};
+  for (const p of partes) {
+    if (p.type !== 'literal') v[p.type] = p.value;
+  }
+
+  return `${v.year}-${v.month}-${v.day}`;
+}

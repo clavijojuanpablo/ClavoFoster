@@ -66,6 +66,7 @@ export function ListaEquipo({
         <ul className="divide-y divide-linea overflow-hidden rounded-[20px] border border-border bg-card">
           {visibles.map((t) => {
             const cuantos = t.servicios.filter((id) => idsServiciosActivos.has(id)).length;
+            const aviso = !t.activo ? null : cuantos === 0 ? 'No presta ningún servicio' : t.turnos.length === 0 ? 'Sin horario' : null;
             return (
               <li key={t.id}>
                 <Link
@@ -84,10 +85,10 @@ export function ListaEquipo({
                     <span
                       className={cn(
                         'truncate text-[13px]',
-                        cuantos === 0 && t.activo ? 'font-semibold text-estado-espera' : 'text-muted-foreground',
+                        aviso ? 'font-semibold text-estado-espera' : 'text-muted-foreground',
                       )}
                     >
-                      {cuantos === 0 ? 'No presta ningún servicio' : `${cuantos} ${cuantos === 1 ? 'servicio' : 'servicios'}`}
+                      {aviso ?? `${cuantos} ${cuantos === 1 ? 'servicio' : 'servicios'}`}
                     </span>
                   </span>
                   <ChevronRight

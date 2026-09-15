@@ -235,6 +235,17 @@ fecha concreta, usando `businesses.timezone`. Ver la sección "El tiempo" de
 
 El turno partido son **dos filas** para el mismo día. Es el caso normal.
 
+Lo que garantiza la base (`20260914170001_horario_semanal.sql`):
+
+- **Los turnos de un mismo día no se cruzan.** Restricción `exclude using gist`
+  sobre `(staff_id, weekday, int4range(minutos))`; 9–13 y 13–19 se tocan pero no
+  se cruzan.
+- **El trabajador es del mismo negocio que la fila**, con llave compuesta, igual
+  que en `staff_services`.
+- **Un turno no pasa la medianoche**: `ends_at > starts_at` ya lo impedía.
+- El horario se escribe con `guardar_horario(p_staff_id, p_turnos)`, que borra
+  e inserta en una sola transacción y corre con los permisos de quien llama.
+
 ### time_off
 
 ```sql

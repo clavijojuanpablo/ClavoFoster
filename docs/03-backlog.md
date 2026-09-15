@@ -27,7 +27,7 @@ quien la hizo.
 | A. Fundación técnica | 7 | 7 | **Hecho** |
 | B. Negocio y onboarding | 5 | 4 | En curso |
 | C. Servicios | 2 | 1 | En curso |
-| D. Trabajadores y horarios | 5 | 2 | En curso |
+| D. Trabajadores y horarios | 5 | 3 | En curso |
 | E. Motor de agendamiento | 5 | 5 | **Hecho** |
 | F. Reserva pública | 6 | 0 | Pendiente |
 | G. Panel y calendario | 6 | 0 | Pendiente |
@@ -35,7 +35,7 @@ quien la hizo.
 | I. Notificaciones | 5 | 0 | Pendiente |
 | J. Suscripciones | 6 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **55** | **19** | |
+| **Total MVP** | **55** | **20** | |
 
 ## Orden de ejecución
 
@@ -234,7 +234,7 @@ contabilidad. Ver regla 5 de `CLAUDE.md`.
 |---|---|---|---|
 | D1 | CRUD de trabajadores: nombre, foto, teléfono, perfil | M | **Hecho** |
 | D2 | Qué servicios presta cada trabajador | M | **Hecho** |
-| D3 | Horario semanal por trabajador, con varios turnos por día | M | Pendiente |
+| D3 | Horario semanal por trabajador, con varios turnos por día | M | **Hecho** |
 | D4 | Bloqueos y ausencias (vacaciones, cita médica, almuerzo) | M | Pendiente |
 | D5 | Invitación de trabajador por email para que acceda a su agenda | S | Pendiente |
 
@@ -260,9 +260,23 @@ nueva arranca con todos los servicios activos marcados.
 13:00 y de 15:00 a 19:00. Es lo normal en peluquerías, no una excepción.
 Criterios:
 - Varios intervalos por día de la semana.
-- El horario del trabajador no puede exceder el horario de atención del local.
+- ~~El horario del trabajador no puede exceder el horario de atención del local.~~
+  **Descartado el 2026-09-14:** no hay horario del local. El horario de cada
+  trabajador es el único límite; un concepto menos que configurar.
 - Guardado como hora local del negocio + día de la semana; la conversión a UTC
   ocurre al generar cupos para una fecha concreta.
+
+Cerrada el 2026-09-14. En `/panel/equipo/<id>/horario`: los siete días, lunes
+primero, cada uno con hasta 4 turnos y "Copiar a los otros días que atiende".
+Quien no tiene horario arranca con la sugerencia lunes a sábado de 9 a 19.
+
+- **Reemplaza todo o nada**, en `guardar_horario()` dentro de la base.
+- La base no deja turnos cruzados en el mismo día ni horarios en el trabajador
+  de otro negocio (`20260914170001_horario_semanal.sql`).
+- **Las citas ya agendadas que quedan por fuera no se mueven ni se cancelan:**
+  al guardar se listan para que el dueño decida. La cuenta la hace
+  `lib/scheduling/horario.ts`, con pruebas.
+- No soporta turnos que pasan la medianoche (22:00 a 02:00).
 
 **D4 — Bloqueos.** Un rango de tiempo puntual donde el trabajador no atiende.
 Criterios:
