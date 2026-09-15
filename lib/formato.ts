@@ -1,3 +1,5 @@
+import { minutosDesdeMedianocheLocal } from '@/lib/scheduling/timezone';
+
 const PESOS = new Intl.NumberFormat('es-CO', {
   style: 'currency',
   currency: 'COP',
@@ -44,4 +46,45 @@ export function fechaLarga(timezone: string, instante: Date): string {
     day: 'numeric',
     month: 'long',
   }).format(instante);
+}
+
+/** "lun 21 sep", corto para listas. */
+export function fechaCorta(timezone: string, instante: Date): string {
+  return new Intl.DateTimeFormat('es-CO', {
+    timeZone: timezone,
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  })
+    .format(instante)
+    .replace(/\./g, '')
+    .replace(',', '');
+}
+
+/**
+ * Cuándo es un bloqueo, en palabras de dueño.
+ *
+ * - Días completos (de medianoche a medianoche local): "lun 21 sep" o
+ *   "lun 21 sep – vie 25 sep". El fin guardado es la medianoche del día
+ *   siguiente, así que se muestra el día anterior.
+ * - Unas horas del mismo día: "lun 21 sep · 9:00 a. m. – 1:00 p. m.".
+ * - Lo demás: "lun 21 sep 6:00 p. m. – mar 22 sep 10:00 a. m.".
+ */
+export function cuandoEsElBloqueo(timezone: string, inicio: Date, fin: Date): string {
+  const inicioEsMedianoche = minutosDesdeMedianocheLocal(timezone, inicio) === 0;
+  const finEsMedianoche = minutosDesdeMedianocheLocal(timezone, fin) === 0;
+
+  if (inicioEsMedianoche && finEsMedianoche) {
+    // El último día bloqueado es el anterior al fin: se toma un instante justo antes.
+    const ultimoDia = new Date(fin.getTime() - 60_000);
+    const primero = fechaCorta(timezone, inicio);
+    const ultimo = fechaCorta(timezone, ultimoDia);
+    return primero === ultimo ? `${primero} · todo el día` : `${primero} – ${ultimo}`;
+  }
+
+  if (fechaCorta(timezone, inicio) === fechaCorta(timezone, fin)) {
+    return `${fechaCorta(timezone, inicio)} · ${hora(timezone, inicio)} – ${hora(timezone, fin)}`;
+  }
+
+  return `${fechaCorta(timezone, inicio)} ${hora(timezone, inicio)} – ${fechaCorta(timezone, fin)} ${hora(timezone, fin)}`;
 }

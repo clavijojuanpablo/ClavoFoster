@@ -238,17 +238,21 @@ function cambiarEstadoTrabajador(anterior: EstadoTrabajador, form: FormData): Pr
 function guardarHorario(anterior: EstadoHorario, form: FormData): Promise<EstadoHorario>;
 // EstadoHorario.citasFuera: las citas agendadas que quedaron por fuera.
 
-function createTimeOff(input: {
-  staffId: string | null; startsAt: string; endsAt: string; reason?: string;
-}): Promise<Result<{ timeOffId: string; affectedAppointments: AdminAppointment[] }>>;
+// Implementadas en app/(admin)/panel/equipo/ausencias/actions.ts (D4). El
+// FormData trae quien ('local' o id), tipo ('horas' | 'dias') y las fechas y
+// horas locales; el servidor las convierte a UTC con la zona del negocio.
+function crearBloqueo(anterior: EstadoBloqueo, form: FormData): Promise<EstadoBloqueo>;
+// EstadoBloqueo.porConfirmar: { firma, citas } si hay citas en el rango. Se
+// guarda cuando el FormData trae confirmado = firma.
+function quitarBloqueo(form: FormData): Promise<void>;
 ```
 
 `guardarHorario` **reemplaza** todo el horario del trabajador, no lo parchea.
 Varias filas por día de la semana permiten turno partido. Las citas que quedan
 por fuera del horario nuevo **no se cancelan**: se devuelven en `citasFuera`.
 
-`createTimeOff` devuelve las citas que quedan dentro del bloqueo **sin
-cancelarlas**. La interfaz las muestra y el dueño decide qué hacer con cada una.
+`crearBloqueo` muestra las citas que quedan dentro del bloqueo **antes de
+guardar y sin cancelarlas**. La interfaz las muestra y el dueño decide qué hacer con cada una.
 Cancelarle citas a alguien automáticamente es exactamente lo que no se debe
 hacer.
 
