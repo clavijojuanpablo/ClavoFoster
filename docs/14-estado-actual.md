@@ -65,7 +65,7 @@ Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 Todo con el sistema de diseño de `15-sistema-de-diseno.md`: menú lateral en
 escritorio y barra inferior con hoja "Más" en celular.
 
-Comprobación: 233 pruebas en verde, `typecheck`, `lint` y `build` limpios.
+Comprobación: 236 pruebas en verde, `typecheck`, `lint` y `build` limpios.
 
 ### Qué sigue
 
