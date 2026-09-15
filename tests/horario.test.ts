@@ -129,6 +129,16 @@ describe('guardar_horario', () => {
   });
 });
 
+// Lo que lee la pantalla Equipo (lib/panel/equipo.ts): con dos llaves hacia
+// staff la API no sabe cuál usar (PGRST201). Ver 20260914190002.
+it('el equipo se lee junto con su horario', async () => {
+  const { error } = await a.cliente
+    .from('staff')
+    .select('id, staff_services(service_id), working_hours(weekday, starts_at, ends_at)')
+    .eq('business_id', a.businessId);
+  expect(error).toBeNull();
+});
+
 describe('garantías de la tabla aunque se salten la función', () => {
   it('NO puede insertar un turno en su negocio con el trabajador de otro', async () => {
     const { error } = await a.cliente

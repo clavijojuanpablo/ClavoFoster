@@ -196,6 +196,9 @@ exigen dos llaves foráneas compuestas, `(staff_id, business_id)` y
 `(service_id, business_id)`, sobre `unique (id, business_id)` en `staff` y
 `services`. La política de RLS solo mira el `business_id` de la fila: sin las
 llaves, un dueño podía enlazar su servicio con el trabajador de otro negocio.
+Son las **únicas** llaves hacia `staff` y `services`: las simples se quitaron
+(`20260914190001`) porque con dos llaves hacia la misma tabla la API de
+Supabase no sabe cuál usar al traer datos relacionados.
 
 ```sql
 create table staff_services (
@@ -241,7 +244,9 @@ Lo que garantiza la base (`20260914170001_horario_semanal.sql`):
   sobre `(staff_id, weekday, int4range(minutos))`; 9–13 y 13–19 se tocan pero no
   se cruzan.
 - **El trabajador es del mismo negocio que la fila**, con llave compuesta, igual
-  que en `staff_services`.
+  que en `staff_services`. Es la única llave hacia `staff`: dos llaves hacia la
+  misma tabla hacen que la API de Supabase no sepa cuál usar al traer datos
+  relacionados (PGRST201).
 - **Un turno no pasa la medianoche**: `ends_at > starts_at` ya lo impedía.
 - El horario se escribe con `guardar_horario(p_staff_id, p_turnos)`, que borra
   e inserta en una sola transacción y corre con los permisos de quien llama.

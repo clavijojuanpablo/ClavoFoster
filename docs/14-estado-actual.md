@@ -206,6 +206,7 @@ operación y no valía la pena arrastrar una librería.
 | El panel se siente lento en local | Casi todo es red: ~200 ms por consulta hasta Supabase. `next dev` suma ~20% y compila cada ruta la primera vez que se abre. En Vercel (Washington) la base queda cerca, pero la primera visita después de un rato sin uso tarda unos segundos: es la función arrancando en frío |
 | `npm run dev` avisa "Slow filesystem detected" | El proyecto está en un disco mecánico o en una carpeta comprimida o sincronizada. Va en `C:\Proyectos\bookia` (SSD). Ver `12-convenciones-de-desarrollo.md` |
 | `typecheck` falla con `Type '"/panel/..."' does not satisfy the constraint` | Se agregó un `layout.tsx` o una página y los tipos de rutas de Next están viejos. `npx next typegen` |
+| Una pantalla del panel dice "No pudimos cargar esta pantalla" y el registro muestra `PGRST201` | Hay dos llaves foráneas entre las mismas dos tablas y la consulta con datos relacionados (`staff_services(...)`) no sabe cuál usar. Dejar una sola llave; si hacen falta las dos, nombrar la relación: `staff_services!nombre_de_la_llave(...)` |
 | Una sección del menú dice "Pronto" y no abre | Es a propósito: todavía no existe. Se activa en `components/admin/navegacion.ts` al terminar su tarea |
 | Un negocio con slug `registro`, `bienvenida`, etc. no se puede crear | Slugs reservados por rutas de la aplicación. Una ruta nueva de primer nivel va en `slug_es_reservado()` |
 
