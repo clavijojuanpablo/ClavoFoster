@@ -1002,7 +1002,12 @@ export type Database = {
         Args: { p_status: Database["public"]["Enums"]["business_status"] }
         Returns: boolean
       }
+      guardar_horario: {
+        Args: { p_staff_id: string; p_turnos: Json }
+        Returns: undefined
+      }
       is_owner: { Args: { b_id: string }; Returns: boolean }
+      minutos_del_dia: { Args: { p_hora: string }; Returns: number }
       slug_disponible: { Args: { p_slug: string }; Returns: boolean }
       slug_es_reservado: { Args: { p_slug: string }; Returns: boolean }
       slug_tiene_formato: { Args: { p_slug: string }; Returns: boolean }

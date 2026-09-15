@@ -5,8 +5,11 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { BUCKET_FOTOS } from '@/lib/fotos';
+import { obtenerCitasProximas } from '@/lib/panel/equipo';
+import { citasFueraDelHorario } from '@/lib/scheduling/horario';
 import { createClient } from '@/lib/supabase/server';
 import { requireDueno } from '@/lib/tenant';
+import { esquemaHorario } from '@/lib/validation/horario';
 import { erroresPorCampo } from '@/lib/validation/negocio';
 import { esquemaTrabajador } from '@/lib/validation/trabajador';
 
@@ -198,4 +201,69 @@ export async function cambiarEstadoTrabajador(
 function errorAlGuardar(businessId: string, error: { code: string; message: string }): EstadoTrabajador {
   console.error('[equipo] no se pudo guardar:', { businessId, code: error.code, message: error.message });
   return { error: 'No pudimos guardar los cambios. Intenta de nuevo', campos: {} };
+}
+
+export type EstadoHorario = {
+  error: string | null;
+  campos: Record<string, string>;
+  guardadoEn: number | null;
+  /** Citas ya agendadas que quedaron por fuera del horario nuevo. */
+  citasFuera: { id: string; inicio: string; cliente: string; servicio: string }[];
+};
+
+/**
+ * Reemplaza el horario semanal de una persona (D3).
+ *
+ * El reemplazo es todo o nada, en guardar_horario() dentro de la base. Las
+ * citas que ya estaban agendadas no se mueven ni se cancelan: se devuelven las
+ * que quedaron por fuera del horario nuevo para que el dueño decida qué hacer
+ * con cada una (docs/13-contratos-de-api.md).
+ */
+export async function guardarHorario(_anterior: EstadoHorario, formData: FormData): Promise<EstadoHorario> {
+  const { negocio } = await requireDueno();
+  const vacio: EstadoHorario = { error: null, campos: {}, guardadoEn: null, citasFuera: [] };
+
+  const datos = esquemaHorario.safeParse({
+    staffId: formData.get('staffId') ?? '',
+    turnos: formData.get('turnos') ?? '',
+  });
+
+  if (!datos.success) {
+    const campos = erroresPorCampo(datos.error);
+    if (campos.staffId) return { ...vacio, error: NO_EXISTE };
+    if (campos.turnos) return { ...vacio, error: campos.turnos };
+    return { ...vacio, campos };
+  }
+
+  const { staffId, turnos } = datos.data;
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc('guardar_horario', { p_staff_id: staffId, p_turnos: turnos });
+
+  if (error) {
+    if (error.hint === 'sin_permiso') return { ...vacio, error: NO_EXISTE };
+    if (error.hint === 'turnos_solapados') return { ...vacio, error: 'Dos turnos del mismo día se cruzan. Revísalos' };
+    console.error('[equipo] no se pudo guardar el horario:', { businessId: negocio.id, code: error.code, message: error.message });
+    return { ...vacio, error: 'No pudimos guardar el horario. Intenta de nuevo' };
+  }
+
+  revalidatePath('/panel', 'layout');
+
+  // El horario ya quedó guardado: si revisar las citas falla, se avisa sin
+  // decir que no se guardó.
+  try {
+    const citas = await obtenerCitasProximas(negocio.id, staffId, new Date());
+    const fuera = citasFueraDelHorario(citas, turnos, negocio.timezone);
+    return {
+      ...vacio,
+      guardadoEn: Date.now(),
+      citasFuera: fuera.map(({ id, inicio, cliente, servicio }) => ({ id, inicio, cliente, servicio })),
+    };
+  } catch {
+    return {
+      ...vacio,
+      guardadoEn: Date.now(),
+      error: 'Guardamos el horario, pero no pudimos revisar si alguna cita quedó por fuera',
+    };
+  }
 }

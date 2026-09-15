@@ -232,18 +232,20 @@ function cambiarEstadoServicio(anterior: EstadoServicio, form: FormData): Promis
 function guardarTrabajador(anterior: EstadoTrabajador, form: FormData): Promise<EstadoTrabajador>;
 function cambiarEstadoTrabajador(anterior: EstadoTrabajador, form: FormData): Promise<EstadoTrabajador>;
 
-function setWorkingHours(input: {
-  staffId: string;
-  hours: { weekday: number; startsAt: string; endsAt: string }[];  // 'HH:mm'
-}): Promise<Result<void>>;
+// Implementada en app/(admin)/panel/equipo/actions.ts (D3), sobre la función
+// guardar_horario() de la base. El FormData trae staffId y turnos como JSON:
+// [{ weekday, desde: 'HH:MM', hasta: 'HH:MM' }].
+function guardarHorario(anterior: EstadoHorario, form: FormData): Promise<EstadoHorario>;
+// EstadoHorario.citasFuera: las citas agendadas que quedaron por fuera.
 
 function createTimeOff(input: {
   staffId: string | null; startsAt: string; endsAt: string; reason?: string;
 }): Promise<Result<{ timeOffId: string; affectedAppointments: AdminAppointment[] }>>;
 ```
 
-`setWorkingHours` **reemplaza** todo el horario del trabajador, no lo parchea.
-Varias filas por día de la semana permiten turno partido.
+`guardarHorario` **reemplaza** todo el horario del trabajador, no lo parchea.
+Varias filas por día de la semana permiten turno partido. Las citas que quedan
+por fuera del horario nuevo **no se cancelan**: se devuelven en `citasFuera`.
 
 `createTimeOff` devuelve las citas que quedan dentro del bloqueo **sin
 cancelarlas**. La interfaz las muestra y el dueño decide qué hacer con cada una.

@@ -38,7 +38,7 @@ npm run typecheck
 
 ## Avance
 
-**19 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
+**20 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
 
 | Épica | Estado |
 |---|---|
@@ -46,7 +46,7 @@ npm run typecheck
 | **A — Fundación técnica** | **Completa** |
 | B — Negocio y onboarding | B1, B3, B4 y B5 hechas. B2 pendiente |
 | C — Servicios | C1 hecha. C3 (categorías y orden) pendiente. C2 (buffers) salió del MVP |
-| D — Trabajadores y horarios | D1 y D2 hechas. D3 (horarios), D4 (bloqueos) y D5 (invitación) pendientes |
+| D — Trabajadores y horarios | D1, D2 y D3 hechas. D4 (bloqueos) y D5 (invitación) pendientes |
 | F, G, H, I, J, K | Sin empezar |
 
 ### Lo que ya funciona
@@ -58,21 +58,21 @@ Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 - `/panel` — Inicio: citas de hoy, siguiente cita, caja del día y "Completa tu negocio"
 - `/panel/negocio` — perfil: página visible u oculta, datos, mapa, fotos, zona horaria
 - `/panel/servicios` — crear, editar, desactivar y reactivar servicios
-- `/panel/equipo` — el equipo y los servicios que presta cada persona
+- `/panel/equipo` — el equipo, los servicios que presta y el horario semanal de cada persona
 - `/api/cron/cleanup-holds` — libera retenciones vencidas (nadie lo llama aún)
 - `lib/scheduling/` — el motor de cupos, con 28 pruebas
 
 Todo con el sistema de diseño de `15-sistema-de-diseno.md`: menú lateral en
 escritorio y barra inferior con hoja "Más" en celular.
 
-Comprobación: 206 pruebas en verde, `typecheck`, `lint` y `build` limpios.
+Comprobación: 236 pruebas en verde, `typecheck`, `lint` y `build` limpios.
 
 ### Qué sigue
 
-**D3 (horario semanal)** y luego **D4 (bloqueos)**. D3 tiene una decisión
-pendiente: el backlog pide que el horario del trabajador no exceda "el horario
-de atención del local", y esa tabla no existe. B2 (el asistente por pasos) une
-B, C y D, así que se cierra al final.
+**D4 (bloqueos y ausencias)**. Con D1–D3 ya hay todo lo que el motor de cupos
+necesita de un trabajador; D4 agrega lo que resta tiempo. B2 (el asistente por
+pasos) une B, C y D, así que se cierra al final. No hay horario del local
+(decidido el 2026-09-14): el de cada trabajador es el único límite.
 
 Después: F (reserva pública), que es donde el motor de cupos por fin se conecta
 con la base y `/[slug]` deja de ser una vitrina.
@@ -206,6 +206,7 @@ operación y no valía la pena arrastrar una librería.
 | El panel se siente lento en local | Casi todo es red: ~200 ms por consulta hasta Supabase. `next dev` suma ~20% y compila cada ruta la primera vez que se abre. En Vercel (Washington) la base queda cerca, pero la primera visita después de un rato sin uso tarda unos segundos: es la función arrancando en frío |
 | `npm run dev` avisa "Slow filesystem detected" | El proyecto está en un disco mecánico o en una carpeta comprimida o sincronizada. Va en `C:\Proyectos\bookia` (SSD). Ver `12-convenciones-de-desarrollo.md` |
 | `typecheck` falla con `Type '"/panel/..."' does not satisfy the constraint` | Se agregó un `layout.tsx` o una página y los tipos de rutas de Next están viejos. `npx next typegen` |
+| Una pantalla del panel dice "No pudimos cargar esta pantalla" y el registro muestra `PGRST201` | Hay dos llaves foráneas entre las mismas dos tablas y la consulta con datos relacionados (`staff_services(...)`) no sabe cuál usar. Dejar una sola llave; si hacen falta las dos, nombrar la relación: `staff_services!nombre_de_la_llave(...)` |
 | Una sección del menú dice "Pronto" y no abre | Es a propósito: todavía no existe. Se activa en `components/admin/navegacion.ts` al terminar su tarea |
 | Un negocio con slug `registro`, `bienvenida`, etc. no se puede crear | Slugs reservados por rutas de la aplicación. Una ruta nueva de primer nivel va en `slug_es_reservado()` |
 

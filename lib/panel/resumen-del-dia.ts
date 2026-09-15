@@ -102,7 +102,7 @@ export async function obtenerResumenDelDia(
           { clave: 'servicios', etiqueta: 'Revisa tus servicios', hecho: (servicios?.count ?? 0) > 0, href: '/panel/servicios' },
           { clave: 'ubicacion', etiqueta: 'Marca tu ubicación', hecho: negocio.latitude !== null, href: '/panel/negocio' },
           { clave: 'equipo', etiqueta: 'Agrega a tu equipo', hecho: (trabajadores?.count ?? 0) > 0, href: '/panel/equipo' },
-          { clave: 'horarios', etiqueta: 'Define los horarios', hecho: (horarios?.count ?? 0) > 0, href: null },
+          { clave: 'horarios', etiqueta: 'Define los horarios', hecho: (horarios?.count ?? 0) > 0, href: '/panel/equipo' },
           { clave: 'publicar', etiqueta: 'Publica tu página', hecho: negocio.is_published, href: '/panel/negocio' },
         ]
       : null,
