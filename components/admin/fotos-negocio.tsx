@@ -4,6 +4,7 @@ import { ImagePlus, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import { BUCKET_FOTOS, urlDeFoto } from '@/lib/fotos';
+import { reducirImagen } from '@/lib/imagenes';
 import { createClient } from '@/lib/supabase/client';
 import { MAX_FOTOS } from '@/lib/validation/perfil';
 
@@ -27,33 +28,6 @@ type Props = {
   onCambio: (fotos: string[]) => void;
 };
 
-const LADO_MAXIMO_PX = 1600;
-const CALIDAD_JPEG = 0.82;
-
-async function reducirImagen(archivo: File): Promise<Blob> {
-  // imageOrientation respeta la rotación EXIF: sin eso, las fotos verticales
-  // del celular quedan acostadas.
-  const imagen = await createImageBitmap(archivo, { imageOrientation: 'from-image' });
-  const escala = Math.min(1, LADO_MAXIMO_PX / Math.max(imagen.width, imagen.height));
-
-  const lienzo = document.createElement('canvas');
-  lienzo.width = Math.round(imagen.width * escala);
-  lienzo.height = Math.round(imagen.height * escala);
-
-  const contexto = lienzo.getContext('2d');
-  if (!contexto) throw new Error('El navegador no permite procesar imágenes');
-  contexto.drawImage(imagen, 0, 0, lienzo.width, lienzo.height);
-  imagen.close();
-
-  return new Promise((resolver, rechazar) =>
-    lienzo.toBlob(
-      (blob) => (blob ? resolver(blob) : rechazar(new Error('No se pudo convertir la imagen'))),
-      'image/jpeg',
-      CALIDAD_JPEG,
-    ),
-  );
-}
-
 export function FotosNegocio({ businessId, fotos, onCambio }: Props) {
   const [subiendo, setSubiendo] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +50,7 @@ export function FotosNegocio({ businessId, fotos, onCambio }: Props) {
 
     for (const archivo of seleccion) {
       try {
-        const blob = await reducirImagen(archivo);
+        const blob = await reducirImagen(archivo, 1600);
         const ruta = `${businessId}/${crypto.randomUUID()}.jpg`;
         const { error: eSubida } = await supabase.storage
           .from(BUCKET_FOTOS)

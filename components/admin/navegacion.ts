@@ -35,7 +35,7 @@ export const MENU_OPERACION: ItemMenu[] = [
 
 export const MENU_NEGOCIO: ItemMenu[] = [
   { etiqueta: 'Servicios', href: '/panel/servicios', icono: Scissors, disponible: true, soloDueno: true },
-  { etiqueta: 'Equipo', href: '/panel/equipo', icono: UserRound, disponible: false, soloDueno: true }, // D1
+  { etiqueta: 'Equipo', href: '/panel/equipo', icono: UserRound, disponible: true, soloDueno: true },
   { etiqueta: 'Caja', href: '/panel/caja', icono: Wallet, disponible: false, soloDueno: true }, // H
   { etiqueta: 'Reportes', href: '/panel/reportes', icono: ChartColumn, disponible: false, soloDueno: true }, // K
 ];

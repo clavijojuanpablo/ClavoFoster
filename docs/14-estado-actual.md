@@ -38,7 +38,7 @@ npm run typecheck
 
 ## Avance
 
-**17 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
+**19 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
 
 | Épica | Estado |
 |---|---|
@@ -46,7 +46,8 @@ npm run typecheck
 | **A — Fundación técnica** | **Completa** |
 | B — Negocio y onboarding | B1, B3, B4 y B5 hechas. B2 pendiente |
 | C — Servicios | C1 hecha. C3 (categorías y orden) pendiente. C2 (buffers) salió del MVP |
-| D, F, G, H, I, J, K | Sin empezar |
+| D — Trabajadores y horarios | D1 y D2 hechas. D3 (horarios), D4 (bloqueos) y D5 (invitación) pendientes |
+| F, G, H, I, J, K | Sin empezar |
 
 ### Lo que ya funciona
 
@@ -57,20 +58,21 @@ Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 - `/panel` — Inicio: citas de hoy, siguiente cita, caja del día y "Completa tu negocio"
 - `/panel/negocio` — perfil: página visible u oculta, datos, mapa, fotos, zona horaria
 - `/panel/servicios` — crear, editar, desactivar y reactivar servicios
+- `/panel/equipo` — el equipo y los servicios que presta cada persona
 - `/api/cron/cleanup-holds` — libera retenciones vencidas (nadie lo llama aún)
 - `lib/scheduling/` — el motor de cupos, con 28 pruebas
 
 Todo con el sistema de diseño de `15-sistema-de-diseno.md`: menú lateral en
 escritorio y barra inferior con hoja "Más" en celular.
 
-Comprobación: 187 pruebas en verde, `typecheck`, `lint` y `build` limpios.
+Comprobación: 206 pruebas en verde, `typecheck`, `lint` y `build` limpios.
 
 ### Qué sigue
 
-**D (trabajadores y horarios)**, empezando por D1 y D2. D2 es urgente para que
-los servicios sirvan: un servicio nuevo no queda asignado a ningún trabajador y
-no se puede reservar hasta que alguien lo preste. B2 (el asistente por pasos)
-une B, C y D, así que se cierra al final.
+**D3 (horario semanal)** y luego **D4 (bloqueos)**. D3 tiene una decisión
+pendiente: el backlog pide que el horario del trabajador no exceda "el horario
+de atención del local", y esa tabla no existe. B2 (el asistente por pasos) une
+B, C y D, así que se cierra al final.
 
 Después: F (reserva pública), que es donde el motor de cupos por fin se conecta
 con la base y `/[slug]` deja de ser una vitrina.
@@ -173,6 +175,13 @@ pública ES256, que se guarda en memoria 10 minutos. Membresía y negocio salen
 en una sola consulta. `/panel/servicios` pasó de ~1 s a ~0,43 s en local. La
 contracara: una sesión cerrada desde otro dispositivo sigue valiendo hasta que
 vence su token (1 hora). RLS valida ese mismo token en cada consulta.
+
+**Los formularios del panel se envían con `onSubmit`, no con `action`.** React 19
+reinicia un `<form action={...}>` cuando la acción termina, también cuando
+devuelve errores de validación: radios y checkboxes volvían en pantalla a su
+valor inicial mientras el estado decía otra cosa, y el siguiente envío mandaba
+lo que se veía (otro color de servicio, la página publicada u oculta). Todo
+formulario nuevo usa `enviarSinReiniciar()` de `lib/formularios.ts`.
 
 **Toda sección del panel muestra un esqueleto al instante** (`app/(admin)/panel/loading.tsx`).
 Sin él, la pantalla se quedaba quieta hasta que llegaban los datos. Una sección

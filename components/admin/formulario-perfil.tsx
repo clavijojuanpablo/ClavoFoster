@@ -15,6 +15,7 @@ import { CopiarLink } from '@/components/admin/copiar-link';
 import { FotosNegocio } from '@/components/admin/fotos-negocio';
 import { Button } from '@/components/ui/button';
 import { Tarjeta } from '@/components/ui/tarjeta';
+import { enviarSinReiniciar } from '@/lib/formularios';
 import { cn } from '@/lib/utils';
 import { CATEGORIAS } from '@/lib/validation/negocio';
 
@@ -120,7 +121,7 @@ export function FormularioPerfil({
     estado.guardadoEn !== null && !guardando && !estado.error && !Object.keys(estado.campos).length;
 
   return (
-    <form action={accion} className="flex flex-col gap-3.5" noValidate>
+    <form onSubmit={enviarSinReiniciar(accion)} className="flex flex-col gap-3.5" noValidate>
       {/* Página pública */}
       <Tarjeta tono="oscura" className="flex flex-col gap-3.5 p-[18px]">
         <label className="flex cursor-pointer items-center justify-between gap-3">

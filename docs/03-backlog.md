@@ -27,7 +27,7 @@ quien la hizo.
 | A. Fundación técnica | 7 | 7 | **Hecho** |
 | B. Negocio y onboarding | 5 | 4 | En curso |
 | C. Servicios | 2 | 1 | En curso |
-| D. Trabajadores y horarios | 5 | 0 | Pendiente |
+| D. Trabajadores y horarios | 5 | 2 | En curso |
 | E. Motor de agendamiento | 5 | 5 | **Hecho** |
 | F. Reserva pública | 6 | 0 | Pendiente |
 | G. Panel y calendario | 6 | 0 | Pendiente |
@@ -35,7 +35,7 @@ quien la hizo.
 | I. Notificaciones | 5 | 0 | Pendiente |
 | J. Suscripciones | 6 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **55** | **17** | |
+| **Total MVP** | **55** | **19** | |
 
 ## Orden de ejecución
 
@@ -232,11 +232,29 @@ contabilidad. Ver regla 5 de `CLAUDE.md`.
 
 | ID | Tarea | Pri | Estado |
 |---|---|---|---|
-| D1 | CRUD de trabajadores: nombre, foto, teléfono, perfil | M | Pendiente |
-| D2 | Qué servicios presta cada trabajador | M | Pendiente |
+| D1 | CRUD de trabajadores: nombre, foto, teléfono, perfil | M | **Hecho** |
+| D2 | Qué servicios presta cada trabajador | M | **Hecho** |
 | D3 | Horario semanal por trabajador, con varios turnos por día | M | Pendiente |
 | D4 | Bloqueos y ausencias (vacaciones, cita médica, almuerzo) | M | Pendiente |
 | D5 | Invitación de trabajador por email para que acceda a su agenda | S | Pendiente |
+
+**D1 y D2 — Equipo.** Cerradas el 2026-09-14, juntas: en `/panel/equipo` el
+dueño agrega a una persona (foto, nombre, celular y perfil, todo opcional menos
+el nombre) y en el mismo editor marca los servicios que presta. Una persona
+nueva arranca con todos los servicios activos marcados.
+
+- **No se borra: se desactiva y se puede reactivar.** Antes de desactivar se le
+  muestra al dueño cuántas citas tiene desde hoy; **no se cancelan solas**.
+- Los enlaces con servicios desactivados no se tocan al guardar: reactivar un
+  servicio no obliga a volver a asignarlo.
+- La foto se reduce a 600 px en el navegador y se guarda como ruta en
+  `business-photos/<negocio>/equipo/`. La base exige que sea de la carpeta del
+  propio negocio.
+- **Hueco cerrado en la base:** `staff_services` no exigía que el trabajador y
+  el servicio fueran del mismo negocio que la fila. Ahora lo exigen llaves
+  compuestas (`20260914150001_equipo.sql`).
+- Quedó fuera a propósito: precio y duración distintos por trabajador (las
+  columnas `*_override` existen, nadie las ve), comisión (v1.1) y reordenar.
 
 **D3 — Horario semanal.** Tiene que soportar turno partido: lunes de 9:00 a
 13:00 y de 15:00 a 19:00. Es lo normal en peluquerías, no una excepción.

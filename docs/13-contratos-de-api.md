@@ -227,8 +227,10 @@ nunca se borra el original.
 function guardarServicio(anterior: EstadoServicio, form: FormData): Promise<EstadoServicio>;
 function cambiarEstadoServicio(anterior: EstadoServicio, form: FormData): Promise<EstadoServicio>;
 
-function upsertStaff(input: StaffInput): Promise<Result<Staff>>;
-function setStaffServices(input: { staffId: string; serviceIds: string[] }): Promise<Result<void>>;
+// Implementadas en app/(admin)/panel/equipo/actions.ts (D1 y D2). Un solo
+// formulario guarda la persona y los servicios que presta.
+function guardarTrabajador(anterior: EstadoTrabajador, form: FormData): Promise<EstadoTrabajador>;
+function cambiarEstadoTrabajador(anterior: EstadoTrabajador, form: FormData): Promise<EstadoTrabajador>;
 
 function setWorkingHours(input: {
   staffId: string;
