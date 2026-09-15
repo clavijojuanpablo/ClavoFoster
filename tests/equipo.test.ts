@@ -127,6 +127,28 @@ describe('lo que la base rechaza aunque se salten el formulario', () => {
   }
 });
 
+// Lo que lee la pantalla Equipo (lib/panel/equipo.ts). Dos llaves foráneas hacia
+// la misma tabla hacen que la API no sepa cuál usar (PGRST201) y la pantalla no
+// carga: pasó con la migración 20260914150001. Si se cambia esa consulta, se
+// cambia acá.
+describe('consultas del panel con datos relacionados', () => {
+  it('el equipo se lee junto con sus servicios', async () => {
+    const { error } = await a.cliente
+      .from('staff')
+      .select('id, name, phone, bio, photo_url, is_active, staff_services(service_id)')
+      .eq('business_id', a.businessId);
+    expect(error).toBeNull();
+  });
+
+  it('los servicios se leen junto con quién los presta', async () => {
+    const { error } = await a.cliente
+      .from('services')
+      .select('id, staff_services(staff_id)')
+      .eq('business_id', a.businessId);
+    expect(error).toBeNull();
+  });
+});
+
 describe('persona desactivada', () => {
   it('desaparece de la página pública pero el dueño la sigue viendo', async () => {
     await admin.from('businesses').update({ is_published: true }).eq('id', a.businessId);
