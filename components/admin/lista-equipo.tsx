@@ -1,4 +1,4 @@
-import { ChevronRight, Plus } from 'lucide-react';
+import { CalendarOff, ChevronRight, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 import { AvatarTrabajador } from '@/components/admin/avatar-trabajador';
@@ -47,14 +47,20 @@ export function ListaEquipo({
         </Link>
       </header>
 
-      <Pestanas etiqueta="Filtrar equipo">
-        <Pestana href="/panel/equipo" activa={vista === 'activos'}>
-          Activos · {activos.length}
-        </Pestana>
-        <Pestana href="/panel/equipo?ver=desactivados" activa={vista === 'desactivados'}>
-          Desactivados · {desactivados.length}
-        </Pestana>
-      </Pestanas>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Pestanas etiqueta="Filtrar equipo">
+          <Pestana href="/panel/equipo" activa={vista === 'activos'}>
+            Activos · {activos.length}
+          </Pestana>
+          <Pestana href="/panel/equipo?ver=desactivados" activa={vista === 'desactivados'}>
+            Desactivados · {desactivados.length}
+          </Pestana>
+        </Pestanas>
+        <Link href="/panel/equipo/ausencias" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
+          <CalendarOff />
+          Ausencias y cierres
+        </Link>
+      </div>
 
       {visibles.length === 0 ? (
         <p className="rounded-[20px] border border-border bg-card p-5 text-sm text-muted-foreground">

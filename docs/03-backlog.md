@@ -27,7 +27,7 @@ quien la hizo.
 | A. Fundación técnica | 7 | 7 | **Hecho** |
 | B. Negocio y onboarding | 5 | 4 | En curso |
 | C. Servicios | 2 | 1 | En curso |
-| D. Trabajadores y horarios | 5 | 3 | En curso |
+| D. Trabajadores y horarios | 5 | 4 | En curso |
 | E. Motor de agendamiento | 5 | 5 | **Hecho** |
 | F. Reserva pública | 6 | 0 | Pendiente |
 | G. Panel y calendario | 6 | 0 | Pendiente |
@@ -35,7 +35,7 @@ quien la hizo.
 | I. Notificaciones | 5 | 0 | Pendiente |
 | J. Suscripciones | 6 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **55** | **20** | |
+| **Total MVP** | **55** | **21** | |
 
 ## Orden de ejecución
 
@@ -235,7 +235,7 @@ contabilidad. Ver regla 5 de `CLAUDE.md`.
 | D1 | CRUD de trabajadores: nombre, foto, teléfono, perfil | M | **Hecho** |
 | D2 | Qué servicios presta cada trabajador | M | **Hecho** |
 | D3 | Horario semanal por trabajador, con varios turnos por día | M | **Hecho** |
-| D4 | Bloqueos y ausencias (vacaciones, cita médica, almuerzo) | M | Pendiente |
+| D4 | Bloqueos y ausencias (vacaciones, cita médica, almuerzo) | M | **Hecho** |
 | D5 | Invitación de trabajador por email para que acceda a su agenda | S | Pendiente |
 
 **D1 y D2 — Equipo.** Cerradas el 2026-09-14, juntas: en `/panel/equipo` el
@@ -283,6 +283,26 @@ Criterios:
 - Bloqueo de un rato, de un día completo o de varios días.
 - Si hay citas dentro del bloqueo, se avisa y se listan antes de confirmar.
   **No se borran solas.**
+
+Cerrada el 2026-09-14. En `/panel/equipo/ausencias` ("Ausencias y cierres"):
+a una persona o a todo el local, por unas horas de un día o por días
+completos, con motivo opcional. Debajo, los bloqueos que todavía no terminan,
+con "Quitar".
+
+- **Si hay citas en el rango, la primera vez no guarda:** las lista y pide
+  "Bloquear de todas formas". La confirmación va firmada con el rango exacto;
+  si el dueño cambia quién o cuándo, se vuelve a revisar.
+- Los días completos van de medianoche a medianoche local e incluyen el último
+  día; un día con cambio de horario dura lo que de verdad dura.
+- Quitar un bloqueo lo borra: no es información contable.
+- **El almuerzo de todos los días no es un bloqueo:** va en el horario (D3), como
+  turno partido. Ausencias es para lo que pasa una vez; la pantalla lo aclara y
+  enlaza al equipo.
+- **Solo el dueño, por ahora.** Que el trabajador bloquee su propio tiempo
+  (`can_block_own_schedule`, flujo 5) llega con D5, cuando el trabajador tenga
+  acceso al panel.
+- Todavía nada consume los bloqueos: el motor de cupos los recibe como
+  `ocupado` cuando se conecte con la base en la épica F.
 
 ---
 

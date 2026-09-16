@@ -271,6 +271,11 @@ create index on time_off using gist (staff_id, tstzrange(starts_at, ends_at));
 `staff_id` nulo cierra el local entero: festivos, inventario, la final de la
 Copa.
 
+La persona tiene que ser del mismo negocio que la fila: llave compuesta
+`(staff_id, business_id)`, la única hacia `staff` (`20260914210001_bloqueos.sql`).
+Con `staff_id` nulo no se verifica, que es lo correcto. El motivo, hasta 120
+caracteres.
+
 ### customers
 
 ```sql
