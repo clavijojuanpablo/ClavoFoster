@@ -30,12 +30,12 @@ quien la hizo.
 | D. Trabajadores y horarios | 5 | 4 | En curso |
 | E. Motor de agendamiento | 5 | 5 | **Hecho** |
 | F. Reserva pública | 6 | 6 | **Hecho** |
-| G. Panel y calendario | 6 | 0 | Pendiente |
+| G. Panel y calendario | 6 | 3 | En curso |
 | H. Contabilidad | 5 | 0 | Pendiente |
 | I. Notificaciones | 5 | 0 | Pendiente |
 | J. Suscripciones | 6 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **55** | **27** | |
+| **Total MVP** | **55** | **30** | |
 
 ## Orden de ejecución
 
@@ -408,23 +408,42 @@ red móvil. Se mide, no se supone.
 
 | ID | Tarea | Pri | Estado |
 |---|---|---|---|
-| G1 | Calendario día y semana, por trabajador y en columnas | M | Pendiente |
-| G2 | Detalle de la cita y datos del cliente | M | Pendiente |
+| G1 | Calendario día y semana, por trabajador y en columnas | M | **Hecho** |
+| G2 | Detalle de la cita y datos del cliente | M | **Hecho** |
 | G3 | Crear cita manual desde el panel | M | Pendiente |
 | G4 | Reprogramar arrastrando, y cancelar | M | Pendiente |
-| G5 | Cambios de estado: cumplida, no asistió, cancelada | M | Pendiente |
+| G5 | Cambios de estado: cumplida, no asistió, cancelada | M | **Hecho** |
 | G6 | PWA instalable (manifest, íconos, pantalla de carga) | M | Pendiente |
 
 **G1 — Calendario.** Es la pantalla más usada del producto y la más difícil de
-construir. Criterios:
+construir. Criterios, todos cumplidos:
 - Vista de día con una columna por trabajador, y vista de semana.
-- Se ve bien en celular: en pantalla angosta cae a un trabajador a la vez.
+- Se ve bien en celular: en pantalla angosta las columnas se deslizan de lado
+  con la regla de horas fija. **No** se apilan: perder la referencia de la hora
+  es perder el calendario.
 - Las citas se distinguen por color de servicio y muestran estado.
 - Actualización en vivo: si un cliente reserva mientras el dueño mira la
   pantalla, la cita aparece sin recargar (Supabase Realtime).
 
-**G5 — Estados.** Marcar **cumplida** dispara el asiento de ingreso de la épica
-H. Debe ser idempotente: marcar dos veces no puede generar dos ingresos.
+Qué se está mirando —día, vista y persona— vive en la URL, no en React: el
+botón de atrás funciona y un día concreto se puede compartir por link. El fondo
+apagado dice cuándo esa persona no trabaja, así que el almuerzo y el sábado
+corto se ven sin abrir el horario.
+
+**El reparto en carriles está aparte, en `lib/agenda/disposicion.ts`, y es
+lógica pura** con sus pruebas. La restricción de la base impide que dos citas
+*activas* se crucen, pero una cumplida y una nueva confirmada sí pueden convivir
+a la misma hora, y una pantalla que dibuje una encima de otra estaría mintiendo.
+
+**G5 — Estados.** Hecho en el detalle de la cita. Marcar **cumplida** dispara el
+asiento de ingreso de la épica H, y por eso el `update` exige que la cita no esté
+ya en ese estado: marcar dos veces no puede terminar en dos ingresos.
+
+**G4 — Lo que falta.** Cancelar ya está (en el detalle de la cita, con
+confirmación). Falta reprogramar **arrastrando** el bloque en el calendario. La
+lógica de mover ya existe y está probada —es `reprogramarPorToken` de F6—; lo
+que falta es el arrastre y una versión que use el id de la cita en vez del token
+del cliente.
 
 **G6 — PWA.** Criterios:
 - Se puede instalar desde Chrome en Android y desde Safari en iOS.

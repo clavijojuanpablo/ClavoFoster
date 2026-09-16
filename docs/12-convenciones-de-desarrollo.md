@@ -152,6 +152,7 @@ se devuelve** y hay que justificar por qué.
 /lib
   /supabase                createServerClient, createBrowserClient, createAdminClient
   /scheduling              Motor de cupos. LÓGICA PURA
+  /agenda                  Disposición del calendario. LÓGICA PURA
   /booking                 La reserva pública: cupos, OTP, crear y gestionar la cita
   /billing                 Interfaz de pagos + adaptadores
   /notifications           Interfaz de mensajería + canales

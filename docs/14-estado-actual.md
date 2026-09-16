@@ -3,7 +3,7 @@
 > **Empieza por acá si vuelves al proyecto después de un tiempo, o si eres
 > alguien nuevo.** Este documento se actualiza al terminar cada tarea.
 >
-> Última actualización: 2026-09-15
+> Última actualización: 2026-09-16
 
 ## Retomar en cinco minutos
 
@@ -38,7 +38,7 @@ npm run typecheck
 
 ## Avance
 
-**27 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
+**30 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
 
 | Épica | Estado |
 |---|---|
@@ -48,7 +48,8 @@ npm run typecheck
 | C — Servicios | C1 hecha. C3 (categorías y orden) pendiente. C2 (buffers) salió del MVP |
 | D — Trabajadores y horarios | D1 a D4 hechas. D5 (invitación del trabajador) pendiente |
 | **F — Reserva pública** | **Completa** |
-| G, H, I, J, K | Sin empezar |
+| G — Panel y calendario | G1, G2 y G5 hechas. Faltan G3, G4 y G6 |
+| H, I, J, K | Sin empezar |
 
 ### Lo que ya funciona
 
@@ -63,6 +64,9 @@ Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 - `/panel/negocio` — perfil: página visible u oculta, datos, mapa, fotos, zona horaria
 - `/panel/servicios` — crear, editar, desactivar y reactivar servicios
 - `/panel/equipo` — el equipo, los servicios que presta y el horario semanal de cada persona
+- `/panel/agenda` — **el calendario**: día y semana, una columna por persona,
+  detalle de la cita y marcarla cumplida o no llegó. Se actualiza sola cuando
+  alguien reserva
 - `/panel/equipo/ausencias` — bloqueos y cierres del local, con aviso de citas afectadas
 - `/api/cron/cleanup-holds` — libera retenciones vencidas (nadie lo llama aún)
 - `lib/scheduling/` — el motor de cupos, con 28 pruebas
@@ -70,7 +74,7 @@ Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 Todo con el sistema de diseño de `15-sistema-de-diseno.md`: menú lateral en
 escritorio y barra inferior con hoja "Más" en celular.
 
-Comprobación: 292 pruebas en verde, `typecheck`, `lint` y `build` limpios.
+Comprobación: 312 pruebas en verde, `typecheck`, `lint` y `build` limpios.
 
 ### Qué sigue
 
@@ -89,10 +93,19 @@ del código lo avisa mientras esté así. Hay que sacar el número y las plantil
 con Meta; es trámite, no programación, y conviene empezarlo ya porque la
 aprobación tarda. Ver `09-notificaciones.md`.
 
-Lo siguiente es **G (panel y calendario)**: hoy el dueño no tiene dónde ver lo
-que le reservaron. Es la pantalla más usada del producto y la más difícil.
-Después H (contabilidad). B2, C3 y D5 se cierran al final. No hay horario del
-local (decidido el 2026-09-14).
+**El dueño ya tiene dónde ver lo que le reservaron** (G1, G2 y G5). El
+calendario está en `/panel/agenda`, con vista de día y de semana, y se
+actualiza solo si alguien reserva mientras lo tiene abierto.
+
+De la épica G faltan tres:
+
+- **G3 — crear cita manual.** Es la que más falta hace: el cliente que llega sin
+  reservar o el que llama por teléfono no tiene cómo entrar a la agenda.
+- **G4 — reprogramar arrastrando.** Cancelar ya está; falta el arrastre.
+- **G6 — PWA instalable.**
+
+Después H (contabilidad), que se engancha con "marcar cumplida". B2, C3 y D5 se
+cierran al final. No hay horario del local (decidido el 2026-09-14).
 
 **Pendiente antes de tener dueños reales: la confirmación de correo.** El
 proyecto parece exigir que el dueño confirme su correo, y el servicio de correo
@@ -230,6 +243,15 @@ después del código. Lo que impide la doble reserva es la restricción de Postg
 no una consulta previa. El razonamiento completo, y cómo se arreglaría si hace
 falta, en `13-contratos-de-api.md`.
 
+**`Intl` no pone el mismo espacio en Node y en el navegador, y eso rompe la
+hidratación.** Según la versión de ICU, el espacio antes de "a. m." es U+202F o
+U+00A0. Se ven idénticos, pero para React son textos distintos: un componente de
+cliente que muestre una hora revienta la hidratación y **se le caen los
+manejadores de eventos a todo el árbol** — en el calendario, los bloques dejaban
+de abrirse. Todas las funciones de `lib/formato.ts` normalizan esos espacios, y
+hay una prueba que lo vigila. Si una pantalla deja de responder a los clics sin
+error visible, mirar acá primero.
+
 **En las pruebas, `server-only` es un módulo vacío.** Ese paquete existe para
 que el empaquetador reviente si un módulo de servidor se cuela en el navegador,
 y revienta también dentro de vitest, donde todo corre en Node. El alias está en
@@ -257,6 +279,8 @@ operación y no valía la pena arrastrar una librería.
 | Un negocio con slug `registro`, `bienvenida`, etc. no se puede crear | Slugs reservados por rutas de la aplicación. Una ruta nueva de primer nivel va en `slug_es_reservado()` |
 | El código de WhatsApp nunca llega | Falta `WHATSAPP_TOKEN` o `WHATSAPP_PHONE_ID`: el canal está en modo consola y el código sale en el registro del servidor (`[whatsapp] SIN CREDENCIALES`). La pantalla del código lo avisa |
 | Reservar falla con "Alguien acaba de tomar esa hora" | Es la restricción `appointments_sin_solapamiento` haciendo su trabajo. No es un error: la interfaz recarga cupos sola |
+| Una pantalla se ve bien pero no responde a los clics | Casi siempre es un error de hidratación, y casi siempre son los espacios de `Intl`. Ver la decisión sobre `lib/formato.ts` arriba. La consola del navegador lo dice, la terminal no |
+| La agenda no se actualiza sola | La tabla tiene que estar en la publicación `supabase_realtime` (migración `20260916120001`). Realtime respeta RLS, así que si la sesión no puede leer la fila, tampoco le llega el evento |
 
 ## Cómo mantener esto vivo
 
