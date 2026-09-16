@@ -4,7 +4,9 @@ import { notFound } from 'next/navigation';
 
 import { FlujoDeReserva } from '@/components/booking/flujo-de-reserva';
 import { obtenerCatalogoReservable, obtenerVentanaDeCupos, type VentanaDeCupos } from '@/lib/booking/disponibilidad';
+import { obtenerCitaPorToken } from '@/lib/booking/gestion';
 import { fechaLocal } from '@/lib/fechas';
+import { whatsappConfigurado } from '@/lib/notifications';
 import { getNegocioPublico } from '@/lib/tenant';
 
 /**
@@ -14,11 +16,15 @@ import { getNegocioPublico } from '@/lib/tenant';
  * Instagram del negocio. El catálogo entero viaja en el primer render para que
  * cambiar de servicio o de persona no cueste una ida a la base; lo único que se
  * pide sobre la marcha son los cupos.
+ *
+ * La misma pantalla sirve para mover una cita que ya existe (F6), con
+ * `?mover=<token>`: el selector de horas es idéntico, así que no hay dos
+ * calendarios que mantener.
  */
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ servicio?: string }>;
+  searchParams: Promise<{ servicio?: string; mover?: string }>;
 };
 
 export async function generateMetadata({ params }: Props) {
@@ -34,19 +40,27 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function ReservarPage({ params, searchParams }: Props) {
-  const [{ slug }, { servicio: servicioPedido }] = await Promise.all([params, searchParams]);
+  const [{ slug }, { servicio: servicioPedido, mover }] = await Promise.all([params, searchParams]);
 
   const negocio = await getNegocioPublico(slug);
   if (!negocio) notFound();
+
+  // `?mover=` es el link de gestión del cliente: se mueve SU cita, y el servicio
+  // queda fijo porque cambiarlo sería otra cita. Si el token no es de este
+  // negocio, se ignora y queda una reserva normal.
+  const citaQueSeMueve = mover ? await obtenerCitaPorToken(mover) : null;
+  const moviendo =
+    citaQueSeMueve && citaQueSeMueve.negocio.slug === negocio.slug ? citaQueSeMueve : null;
 
   const catalogo = await obtenerCatalogoReservable(negocio);
   const ahora = new Date();
   const hoy = fechaLocal(negocio.timezone, ahora);
 
   // Si el cliente llegó con un servicio escogido —tocó uno en la página del
-  // negocio—, sus cupos van en el mismo render: se ahorra una vuelta justo en
-  // el paso donde la gente abandona.
-  const inicial = catalogo.find((s) => s.id === servicioPedido && s.trabajadores.length > 0);
+  // negocio, o está moviendo una cita—, sus cupos van en el mismo render: se
+  // ahorra una vuelta justo en el paso donde la gente abandona.
+  const buscado = moviendo?.servicioId ?? servicioPedido;
+  const inicial = catalogo.find((s) => s.id === buscado && s.trabajadores.length > 0);
   let ventanaInicial: VentanaDeCupos | null = null;
   if (inicial) {
     ventanaInicial = await obtenerVentanaDeCupos({
@@ -63,14 +77,14 @@ export default async function ReservarPage({ params, searchParams }: Props) {
       <div className="mx-auto w-full max-w-xl px-4 pb-40">
         <header className="flex items-center gap-2 py-4">
           <Link
-            href={`/${negocio.slug}`}
-            aria-label={`Volver a ${negocio.name}`}
+            href={moviendo ? `/cita/${moviendo.token}` : `/${negocio.slug}`}
+            aria-label={moviendo ? 'Volver a tu cita' : `Volver a ${negocio.name}`}
             className="-ml-2 flex size-10 items-center justify-center rounded-full text-tinta transition hover:bg-muted"
           >
             <ArrowLeft className="size-5" />
           </Link>
           <div className="flex min-w-0 flex-col">
-            <span className="text-[11px] font-semibold tracking-wide text-tenue uppercase">Reservar</span>
+            <span className="text-[11px] font-semibold tracking-wide text-tenue uppercase">{moviendo ? 'Mover la cita' : 'Reservar'}</span>
             <span className="truncate text-base font-semibold">{negocio.name}</span>
           </div>
         </header>
@@ -88,6 +102,8 @@ export default async function ReservarPage({ params, searchParams }: Props) {
             catalogo={catalogo}
             servicioInicial={inicial?.id ?? null}
             ventanaInicial={ventanaInicial}
+            whatsappConfigurado={whatsappConfigurado()}
+            moviendo={moviendo ? { token: moviendo.token } : null}
           />
         )}
       </div>

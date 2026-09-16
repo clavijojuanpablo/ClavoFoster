@@ -38,7 +38,7 @@ npm run typecheck
 
 ## Avance
 
-**24 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
+**27 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
 
 | Épica | Estado |
 |---|---|
@@ -47,7 +47,7 @@ npm run typecheck
 | B — Negocio y onboarding | B1, B3, B4 y B5 hechas. B2 pendiente |
 | C — Servicios | C1 hecha. C3 (categorías y orden) pendiente. C2 (buffers) salió del MVP |
 | D — Trabajadores y horarios | D1 a D4 hechas. D5 (invitación del trabajador) pendiente |
-| F — Reserva pública | F1, F2 y F3 hechas. Falta confirmar la cita: F4, F5 y F6 |
+| **F — Reserva pública** | **Completa** |
 | G, H, I, J, K | Sin empezar |
 
 ### Lo que ya funciona
@@ -55,7 +55,9 @@ npm run typecheck
 Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 
 - `/[slug]` — página pública del negocio, sin sesión. Ej. `/barberia-demo`
-- `/[slug]/reservar` — escoger servicio, persona, día y hora, con cupos reales
+- `/[slug]/reservar` — **la reserva completa**: servicio, persona, día y hora con
+  cupos reales, código por WhatsApp y la cita guardada
+- `/cita/[token]` — la cita del cliente: ver, mover la hora y cancelar
 - `/login`, `/registro`, `/bienvenida` — entrar, crear cuenta y crear el negocio
 - `/panel` — Inicio: citas de hoy, siguiente cita, caja del día y "Completa tu negocio"
 - `/panel/negocio` — perfil: página visible u oculta, datos, mapa, fotos, zona horaria
@@ -68,24 +70,29 @@ Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 Todo con el sistema de diseño de `15-sistema-de-diseno.md`: menú lateral en
 escritorio y barra inferior con hoja "Más" en celular.
 
-Comprobación: 274 pruebas en verde, `typecheck`, `lint` y `build` limpios.
+Comprobación: 292 pruebas en verde, `typecheck`, `lint` y `build` limpios.
 
 ### Qué sigue
 
-**El motor ya está conectado con la base** (F2 y F3): `/[slug]/reservar` ofrece
-horas libres de verdad, calculadas con el horario de cada persona, sus citas y
-los bloqueos. Lo que falta para que una cita exista es **F4 y F5**: identificar
-al cliente por su celular y guardar la cita. El botón "Continuar" ya está en
-pantalla, apagado, esperando ese paso.
+**El producto ya hace lo que promete de lado del cliente final.** Un
+desconocido entra a `/barberia-demo`, escoge corte, persona y hora, recibe un
+código, y la cita queda guardada con su link para moverla o cancelarla. La
+épica F está completa.
 
-**F4 está bloqueada por una decisión, no por código:** el OTP va por WhatsApp
-Cloud API y todavía no hay credenciales de Meta (`WHATSAPP_TOKEN`,
-`WHATSAPP_PHONE_ID`). Hay que conseguirlas, o decidir un camino alterno para
-probar mientras llegan. Ver `09-notificaciones.md`.
+**⚠️ Antes de un cliente real: las credenciales de WhatsApp.** Sin
+`WHATSAPP_TOKEN` y `WHATSAPP_PHONE_ID`, el canal está en *modo consola*: no
+manda nada y escribe el código de verificación en el registro del servidor.
+Sirve para desarrollar y no bloquea nada, pero **con clientes de verdad es un
+agujero**: cualquiera con acceso a los registros vería los códigos. La pantalla
+del código lo avisa mientras esté así. Hay que sacar el número y las plantillas
+(`auth_otp`, `booking_confirmed`, `booking_cancelled`, `booking_rescheduled`)
+con Meta; es trámite, no programación, y conviene empezarlo ya porque la
+aprobación tarda. Ver `09-notificaciones.md`.
 
-Después de F: G (panel y calendario), donde el dueño ve lo que le reservaron.
-B2 (el asistente por pasos) y C3 se cierran al final. No hay horario del local
-(decidido el 2026-09-14).
+Lo siguiente es **G (panel y calendario)**: hoy el dueño no tiene dónde ver lo
+que le reservaron. Es la pantalla más usada del producto y la más difícil.
+Después H (contabilidad). B2, C3 y D5 se cierran al final. No hay horario del
+local (decidido el 2026-09-14).
 
 **Pendiente antes de tener dueños reales: la confirmación de correo.** El
 proyecto parece exigir que el dueño confirme su correo, y el servicio de correo
@@ -132,6 +139,7 @@ Settings → Environment Variables:
 | `SUPABASE_SECRET_KEY` | Ídem, la llave *secret*. **Nunca con prefijo público** |
 | `NEXT_PUBLIC_APP_URL` | La URL que asigne Vercel, no `localhost` |
 | `CRON_SECRET` | `openssl rand -hex 32`, o el mismo de `.env.local` |
+| `WHATSAPP_TOKEN` y `WHATSAPP_PHONE_ID` | Meta → WhatsApp Cloud API. **Opcionales en desarrollo**: sin ellas el canal escribe en el log en vez de enviar. Obligatorias antes de un cliente real |
 
 > **Márcalas en los tres entornos (Production, Preview y Development), no solo
 > en Production.** Si solo están en Production, cualquier rama que no sea `main`
@@ -150,8 +158,13 @@ que `CRON_SECRET` sí quedó puesto— pero nadie lo llama solo. Ojo con esto al
 configurarlo: el plan gratuito de Vercel solo permite tareas programadas **una
 vez al día**, y una limpieza diaria de retenciones de 10 minutos no sirve de
 nada. Lo correcto es `pg_cron` dentro de Supabase, como dice
-`04-stack-tecnologico.md`. No es urgente: las retenciones todavía no se crean,
-eso llega con la épica F.
+`04-stack-tecnologico.md`.
+
+Lo que sí hay pendiente de programar es **`limpiar_otp_vencidos()`**, que borra
+los códigos de más de un día. Nadie la llama todavía. No es urgente —son unas
+pocas filas— pero son datos de desconocidos y no tienen por qué quedarse.
+`cleanup-holds` sigue sin tener nada que limpiar: la reserva no crea
+retenciones (ver `13-contratos-de-api.md`, `holdSlot`).
 
 ## Decisiones que se tomaron sobre la marcha
 
@@ -206,6 +219,17 @@ debe ser—, y el cliente final no tiene sesión que RLS pueda evaluar. Lo que
 queda en pie: el `business_id` sale del slug verificado, no del navegador, y de
 `lib/booking/disponibilidad.ts` solo salen horas libres.
 
+**El OTP no se guarda: se guarda su HMAC, con la llave secreta de Supabase.** Se
+reutiliza esa llave en vez de pedir otra variable de entorno: ya es secreta, ya
+vive solo en el servidor y ya es obligatoria para arrancar. El permiso que sale
+de verificar es un token firmado con la misma llave, sin tabla que limpiar.
+
+**La cita se crea de una vez, sin apartar el cupo antes.** `holdSlot` no existe:
+`appointments.customer_id` no admite nulos y al cliente solo se le conoce
+después del código. Lo que impide la doble reserva es la restricción de Postgres,
+no una consulta previa. El razonamiento completo, y cómo se arreglaría si hace
+falta, en `13-contratos-de-api.md`.
+
 **En las pruebas, `server-only` es un módulo vacío.** Ese paquete existe para
 que el empaquetador reviente si un módulo de servidor se cuela en el navegador,
 y revienta también dentro de vitest, donde todo corre en Node. El alias está en
@@ -231,6 +255,8 @@ operación y no valía la pena arrastrar una librería.
 | Una pantalla del panel dice "No pudimos cargar esta pantalla" y el registro muestra `PGRST201` | Hay dos llaves foráneas entre las mismas dos tablas y la consulta con datos relacionados (`staff_services(...)`) no sabe cuál usar. Dejar una sola llave; si hacen falta las dos, nombrar la relación: `staff_services!nombre_de_la_llave(...)` |
 | Una sección del menú dice "Pronto" y no abre | Es a propósito: todavía no existe. Se activa en `components/admin/navegacion.ts` al terminar su tarea |
 | Un negocio con slug `registro`, `bienvenida`, etc. no se puede crear | Slugs reservados por rutas de la aplicación. Una ruta nueva de primer nivel va en `slug_es_reservado()` |
+| El código de WhatsApp nunca llega | Falta `WHATSAPP_TOKEN` o `WHATSAPP_PHONE_ID`: el canal está en modo consola y el código sale en el registro del servidor (`[whatsapp] SIN CREDENCIALES`). La pantalla del código lo avisa |
+| Reservar falla con "Alguien acaba de tomar esa hora" | Es la restricción `appointments_sin_solapamiento` haciendo su trabajo. No es un error: la interfaz recarga cupos sola |
 
 ## Cómo mantener esto vivo
 

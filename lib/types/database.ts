@@ -66,7 +66,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          blocked_range: unknown
+          blocked_range?: unknown
           buffer_after_minutes?: number
           buffer_before_minutes?: number
           business_id: string
@@ -513,6 +513,7 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
+          ip_hash: string | null
           phone: string
         }
         Insert: {
@@ -523,6 +524,7 @@ export type Database = {
           created_at?: string
           expires_at: string
           id?: string
+          ip_hash?: string | null
           phone: string
         }
         Update: {
@@ -533,6 +535,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          ip_hash?: string | null
           phone?: string
         }
         Relationships: [
@@ -773,18 +776,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "staff_services_service_id_fkey"
-            columns: ["service_id"]
+            foreignKeyName: "staff_services_servicio_mismo_negocio"
+            columns: ["service_id", "business_id"]
             isOneToOne: false
             referencedRelation: "services"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "business_id"]
           },
           {
-            foreignKeyName: "staff_services_staff_id_fkey"
-            columns: ["staff_id"]
+            foreignKeyName: "staff_services_trabajador_mismo_negocio"
+            columns: ["staff_id", "business_id"]
             isOneToOne: false
             referencedRelation: "staff"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "business_id"]
           },
         ]
       }
@@ -931,11 +934,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "time_off_staff_id_fkey"
-            columns: ["staff_id"]
+            foreignKeyName: "time_off_trabajador_mismo_negocio"
+            columns: ["staff_id", "business_id"]
             isOneToOne: false
             referencedRelation: "staff"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "business_id"]
           },
         ]
       }
@@ -973,11 +976,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "working_hours_staff_id_fkey"
-            columns: ["staff_id"]
+            foreignKeyName: "working_hours_trabajador_mismo_negocio"
+            columns: ["staff_id", "business_id"]
             isOneToOne: false
             referencedRelation: "staff"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "business_id"]
           },
         ]
       }
@@ -1007,6 +1010,7 @@ export type Database = {
         Returns: undefined
       }
       is_owner: { Args: { b_id: string }; Returns: boolean }
+      limpiar_otp_vencidos: { Args: never; Returns: number }
       minutos_del_dia: { Args: { p_hora: string }; Returns: number }
       slug_disponible: { Args: { p_slug: string }; Returns: boolean }
       slug_es_reservado: { Args: { p_slug: string }; Returns: boolean }

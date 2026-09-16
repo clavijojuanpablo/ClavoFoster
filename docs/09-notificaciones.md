@@ -70,6 +70,21 @@ el MVP, y por eso es la única que el negocio tiene apagada por defecto.
 > la épica I, no al terminarla** — quedarse esperando aprobación con todo el
 > código listo es un bloqueo evitable.
 
+### Estado: el código ya las usa, Meta todavía no las conoce
+
+Desde la épica F (2026-09-15) el producto ya manda `auth_otp`,
+`booking_confirmed`, `booking_cancelled` y `booking_rescheduled`. Pero
+`lib/notifications/whatsapp.ts` funciona **sin credenciales, a propósito**:
+mientras no existan `WHATSAPP_TOKEN` y `WHATSAPP_PHONE_ID` entra en *modo
+consola*, no envía nada y escribe el mensaje en el registro del servidor. La
+pantalla del código se lo avisa a quien esté probando.
+
+Eso permitió construir y probar la reserva entera sin esperar el trámite. **No
+puede quedar así con clientes reales:** en modo consola los códigos de
+verificación quedan en los registros. Lo pendiente es puro trámite con Meta:
+sacar el número, verificar el negocio y mandar esas cuatro plantillas a
+aprobación. Conviene arrancarlo ya.
+
 ## Cuándo se dispara cada cosa
 
 ### Al cliente

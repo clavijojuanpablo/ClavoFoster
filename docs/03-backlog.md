@@ -29,13 +29,13 @@ quien la hizo.
 | C. Servicios | 2 | 1 | En curso |
 | D. Trabajadores y horarios | 5 | 4 | En curso |
 | E. Motor de agendamiento | 5 | 5 | **Hecho** |
-| F. Reserva pública | 6 | 3 | En curso |
+| F. Reserva pública | 6 | 6 | **Hecho** |
 | G. Panel y calendario | 6 | 0 | Pendiente |
 | H. Contabilidad | 5 | 0 | Pendiente |
 | I. Notificaciones | 5 | 0 | Pendiente |
 | J. Suscripciones | 6 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **55** | **24** | |
+| **Total MVP** | **55** | **27** | |
 
 ## Orden de ejecución
 
@@ -344,9 +344,9 @@ lógica en la aplicación.
 | F1 | Página pública del negocio en `/[slug]` | M | **Hecho** |
 | F2 | Selección de servicio y de trabajador (con "el primero disponible") | M | **Hecho** |
 | F3 | Calendario de cupos disponibles | M | **Hecho** |
-| F4 | Identificación por celular con OTP de WhatsApp | M | Pendiente |
-| F5 | Alta de cliente nuevo (solo nombre) y reconocimiento del que vuelve | M | Pendiente |
-| F6 | Página de gestión de la cita: cancelar y reprogramar por link | M | Pendiente |
+| F4 | Identificación por celular con OTP de WhatsApp | M | **Hecho** |
+| F5 | Alta de cliente nuevo (solo nombre) y reconocimiento del que vuelve | M | **Hecho** |
+| F6 | Página de gestión de la cita: cancelar y reprogramar por link | M | **Hecho** |
 
 **F2 y F3 — Cómo quedaron.** Todo en una sola pantalla que va creciendo
 (`/[slug]/reservar`), no en un asistente con "siguiente": en un celular, cambiar
@@ -354,19 +354,49 @@ el servicio tiene que ser tocar el servicio. El catálogo entero viaja en el
 primer render y lo único que se pide sobre la marcha son los cupos, en tandas de
 catorce días. El cálculo vive en `lib/booking/disponibilidad.ts`, que es lo único
 del flujo público que usa el cliente privilegiado: hacia afuera solo salen horas
-libres. El paso de confirmar está en pantalla pero apagado hasta F4.
+libres.
 
-**F4 — OTP por WhatsApp.** Ver `09-notificaciones.md`. Criterios:
+**F4 — OTP por WhatsApp.** Ver `09-notificaciones.md`. Criterios, todos cumplidos:
 - Código de 6 dígitos, válido 10 minutos, máximo 5 intentos.
 - Límite de envíos por número y por IP, para que nadie nos queme el saldo.
 - Reenvío disponible a los 60 segundos.
 - El número se normaliza a formato internacional (`+57...`) antes de guardarlo.
 
-**F6 — Gestión por link.** Criterios:
+**Funciona sin credenciales de Meta, a propósito** (decidido el 2026-09-15). El
+canal de `lib/notifications/whatsapp.ts` entra en *modo consola* mientras no
+existan `WHATSAPP_TOKEN` y `WHATSAPP_PHONE_ID`: no envía nada y escribe el
+mensaje en el registro del servidor, y la pantalla del código lo avisa. Así el
+flujo se construyó y se probó entero sin esperar a que Meta apruebe el número y
+las plantillas, que es un trámite y no una tarea de programación. **Ese modo no
+puede quedar encendido con clientes reales**: los códigos quedarían en los
+registros. Ver `14-estado-actual.md`.
+
+El código en claro no se guarda en ninguna parte: en `otp_codes` va su HMAC. El
+permiso para terminar de reservar es un token firmado, sin tabla, que vale para
+un negocio, un número y veinte minutos.
+
+**F5 — Cómo quedó.** No hay retención de cupo previa: la cita se crea de una vez
+al confirmar, porque `appointments.customer_id` no admite nulos y el cliente solo
+se conoce después del código. Lo que impide la doble reserva no es una consulta
+previa sino la restricción `appointments_sin_solapamiento`, y hay una prueba con
+dos peticiones simultáneas por el mismo cupo donde exactamente una gana. La
+ventana de exposición es lo que el cliente tarda escribiendo el código; si eso
+llega a costar cupos, el arreglo es volver `customer_id` nulable y apartar antes.
+
+**F6 — Gestión por link.** Criterios, todos cumplidos:
 - El link lleva un token aleatorio largo, no el ID de la cita.
 - Muestra únicamente esa cita.
 - Respeta las anticipaciones mínimas configuradas por el negocio.
 - Al cancelar, el cupo queda inmediatamente disponible para otros.
+
+Reprogramar reusa la misma pantalla de reserva con `?mover=<token>`: el selector
+de horas es idéntico, así que no hay dos calendarios que mantener. Y no pide
+código otra vez — el token del link ya prueba de quién es la cita.
+
+**Mover no es cancelar y volver a crear.** Es la misma cita, con su mismo token
+y su mismo precio: recrearla le cambiaría al cliente el link que ya tiene en su
+chat y le pondría el precio de hoy, que es justo lo que prohíbe la regla 4 de
+CLAUDE.md.
 
 **Nota de rendimiento:** `/[slug]` es la página que ven los clientes finales y
 es la cara del producto. Tiene que cargar rápido en un celular de gama media con

@@ -1,10 +1,12 @@
 'use client';
 
 import { Check, ChevronDown, Clock, Loader2, Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 
-import { cuposDisponibles } from '@/app/(public)/[slug]/reservar/actions';
+import { cuposDisponibles, moverCita } from '@/app/(public)/[slug]/reservar/actions';
 import { AvatarTrabajador } from '@/components/admin/avatar-trabajador';
+import { Confirmacion } from '@/components/booking/confirmacion';
 import { Button } from '@/components/ui/button';
 import type { Cupo, ServicioReservable, VentanaDeCupos } from '@/lib/booking/tipos';
 import { duracion, hora, pesos } from '@/lib/formato';
@@ -33,6 +35,13 @@ type Props = {
   catalogo: ServicioReservable[];
   servicioInicial: string | null;
   ventanaInicial: VentanaDeCupos | null;
+  /** Falso mientras no haya credenciales de Meta. Se lo avisa al cliente al pedir el código. */
+  whatsappConfigurado: boolean;
+  /**
+   * Presente cuando se está moviendo una cita que ya existe (F6). El servicio
+   * queda fijo y no se pide código: el token del link ya prueba quién es.
+   */
+  moviendo: { token: string } | null;
 };
 
 export function FlujoDeReserva({
@@ -43,16 +52,67 @@ export function FlujoDeReserva({
   catalogo,
   servicioInicial,
   ventanaInicial,
+  whatsappConfigurado,
+  moviendo,
 }: Props) {
+  const router = useRouter();
   const [servicioId, setServicioId] = useState(servicioInicial);
   const [quien, setQuien] = useState<string>(CUALQUIERA);
   const [ventana, setVentana] = useState<VentanaDeCupos | null>(ventanaInicial);
   const [fecha, setFecha] = useState<string | null>(primerDiaConCupos(ventanaInicial));
   const [elegido, setElegido] = useState<Cupo | null>(null);
+  const [confirmando, setConfirmando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cargando, empezar] = useTransition();
 
   const servicio = catalogo.find((s) => s.id === servicioId) ?? null;
+
+  /**
+   * El cupo se lo llevó otro mientras el cliente escribía su código. Se vuelve
+   * a escoger hora con la disponibilidad fresca, que es lo único útil que se
+   * puede hacer.
+   */
+  function volverAEscoger(aviso: string) {
+    setConfirmando(false);
+    setElegido(null);
+    setError(aviso);
+    if (servicio) pedirCupos({ servicio, quien, desde: fecha ?? hoy });
+  }
+
+  /** Mover la cita no pasa por el código: el token del link ya es el permiso. */
+  function moverLaCita() {
+    if (!moviendo || !elegido) return;
+    setError(null);
+    empezar(async () => {
+      const r = await moverCita({ token: moviendo.token, inicio: elegido.inicio, staffId: elegido.staffId });
+
+      if (!r.ok) {
+        if (r.cupoOcupado) {
+          volverAEscoger(r.error);
+          return;
+        }
+        setError(r.error);
+        return;
+      }
+
+      router.push(`/cita/${moviendo.token}`);
+    });
+  }
+
+  if (confirmando && servicio && elegido) {
+    return (
+      <Confirmacion
+        slug={slug}
+        servicio={servicio}
+        cupo={elegido}
+        cuando={diaYHora(elegido.inicio, timezone)}
+        precioCop={servicio.trabajadores.find((t) => t.id === elegido.staffId)?.precioCop ?? servicio.precioCop}
+        whatsappConfigurado={whatsappConfigurado}
+        onVolver={() => setConfirmando(false)}
+        onCupoOcupado={() => volverAEscoger('Alguien acaba de tomar esa hora. Escoge otra.')}
+      />
+    );
+  }
 
   /**
    * Pide una tanda de cupos. `acumular` es el "Ver más días": los días nuevos
@@ -107,6 +167,20 @@ export function FlujoDeReserva({
 
   return (
     <div className="flex flex-col gap-7">
+      {/*
+        Al mover una cita el servicio no se toca: cambiarlo sería otra cita, con
+        otra duración y otro precio. Se muestra para que el cliente sepa qué
+        está moviendo, y ya.
+      */}
+      {moviendo ? (
+        <section className="flex flex-col gap-1 rounded-3xl border border-border bg-card p-[18px]">
+          <span className="text-[11px] font-semibold tracking-wide text-tenue uppercase">Estás moviendo</span>
+          <span className="font-heading text-xl font-bold">{servicio?.nombre}</span>
+          <span className="text-sm text-muted-foreground">
+            {servicio && `${duracion(servicio.duracionMinutos)} · ${pesos(servicio.precioCop)}`}
+          </span>
+        </section>
+      ) : (
       <Paso numero={1} titulo="¿Qué te vas a hacer?">
         <ul className="flex flex-col gap-2.5">
           {catalogo.map((s) => {
@@ -149,9 +223,10 @@ export function FlujoDeReserva({
           })}
         </ul>
       </Paso>
+      )}
 
       {servicio && dejaEscogerPersona && servicio.trabajadores.length > 1 && (
-        <Paso numero={2} titulo="¿Con quién?">
+        <Paso numero={moviendo ? 1 : 2} titulo="¿Con quién?">
           <ul className="flex flex-wrap gap-2">
             <li>
               <ChipPersona activo={quien === CUALQUIERA} onClick={() => escogerQuien(CUALQUIERA)}>
@@ -174,7 +249,10 @@ export function FlujoDeReserva({
       )}
 
       {servicio && (
-        <Paso numero={dejaEscogerPersona && servicio.trabajadores.length > 1 ? 3 : 2} titulo="¿Cuándo?">
+        <Paso
+          numero={(dejaEscogerPersona && servicio.trabajadores.length > 1 ? 3 : 2) - (moviendo ? 1 : 0)}
+          titulo={moviendo ? '¿Para cuándo la movemos?' : '¿Cuándo?'}
+        >
           {error ? (
             <Aviso>
               {error}{' '}
@@ -269,6 +347,9 @@ export function FlujoDeReserva({
           servicio={servicio}
           cupo={elegido}
           timezone={timezone}
+          etiqueta={moviendo ? 'Mover' : 'Continuar'}
+          trabajando={!!moviendo && cargando}
+          onContinuar={() => (moviendo ? moverLaCita() : setConfirmando(true))}
           // Con "el primero disponible" sí se dice a quién le tocó: la gente
           // quiere saberlo antes de confirmar, no al llegar al local.
           mostrarQuien={quien === CUALQUIERA || servicio.trabajadores.length > 1}
@@ -356,11 +437,17 @@ function Resumen({
   servicio,
   cupo,
   timezone,
+  etiqueta,
+  trabajando,
+  onContinuar,
   mostrarQuien,
 }: {
   servicio: ServicioReservable;
   cupo: Cupo;
   timezone: string;
+  etiqueta: string;
+  trabajando: boolean;
+  onContinuar: () => void;
   mostrarQuien: boolean;
 }) {
   const persona = servicio.trabajadores.find((t) => t.id === cupo.staffId);
@@ -377,8 +464,9 @@ function Resumen({
             {mostrarQuien && ` · ${cupo.staffNombre}`} · {pesos(persona?.precioCop ?? servicio.precioCop)}
           </span>
         </span>
-        <Button variant="acento" className="shrink-0" disabled>
-          Continuar
+        <Button variant="acento" className="shrink-0" onClick={onContinuar} disabled={trabajando}>
+          {trabajando && <Loader2 className="size-[18px] animate-spin" />}
+          {etiqueta}
         </Button>
       </div>
     </div>

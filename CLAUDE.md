@@ -85,6 +85,7 @@ práctica. Una columna se llama `*_cop` para que sea evidente.
 /lib
   /supabase          Clientes de Supabase (servidor, navegador, admin)
   /scheduling        Motor de cupos — lógica pura, sin dependencias de IO
+  /booking           La reserva pública sobre el motor: cupos, OTP y citas
   /billing           Interfaz de pagos y adaptadores por pasarela
   /notifications     WhatsApp y email
 /supabase
