@@ -36,6 +36,31 @@ export function rangoDelDia(timezone: string, fecha: string): { desde: Date; has
   };
 }
 
+/**
+ * Suma días a una fecha de calendario 'YYYY-MM-DD'.
+ *
+ * Aritmética en UTC puro y a propósito: una fecha así es una etiqueta de
+ * calendario, no un instante, y acá no hay zona horaria que valga. Un día con
+ * cambio de horario sigue siendo un día en el calendario. `Date.UTC` normaliza
+ * el fin de mes y el año bisiesto solo.
+ */
+export function sumarDias(fecha: string, dias: number): string {
+  const { año, mes, dia } = partirFecha(fecha);
+
+  return new Date(Date.UTC(año, mes - 1, dia + dias)).toISOString().slice(0, 10);
+}
+
+/** Las fechas de `desde` a `hasta`, ambas incluidas. Vacío si `hasta` es anterior. */
+export function fechasEntre(desde: string, hasta: string): string[] {
+  const fechas: string[] = [];
+
+  for (let cursor = desde; cursor <= hasta; cursor = sumarDias(cursor, 1)) {
+    fechas.push(cursor);
+  }
+
+  return fechas;
+}
+
 /** Hora del día en la zona del negocio, para escoger el saludo. */
 export function horaLocal(timezone: string, instante: Date): number {
   const hora = Number(

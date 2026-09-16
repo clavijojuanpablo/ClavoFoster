@@ -33,6 +33,14 @@ export type NegocioPublico = Pick<
   | 'brand_color'
   | 'allow_staff_choice'
   | 'photos'
+  // Reglas de reserva. Las necesita el motor de cupos para la página pública.
+  // No son secretas —se deducen mirando los cupos que se ofrecen—, pero aun así
+  // no viajan al navegador: el cálculo pasa entero en el servidor.
+  | 'slot_granularity_minutes'
+  | 'min_notice_minutes'
+  | 'max_advance_days'
+  | 'cancel_notice_minutes'
+  | 'align_to_clock'
 >;
 
 export type ContextoNegocio = {
@@ -41,8 +49,10 @@ export type ContextoNegocio = {
   staffId: string | null;
 };
 
+// Una sola cadena literal, larga a propósito: los tipos de Supabase se deducen
+// del texto del select y una concatenación los rompe.
 const CAMPOS_PUBLICOS =
-  'id, slug, name, category, timezone, phone, address, city, logo_url, cover_url, brand_color, allow_staff_choice, photos';
+  'id, slug, name, category, timezone, phone, address, city, logo_url, cover_url, brand_color, allow_staff_choice, photos, slot_granularity_minutes, min_notice_minutes, max_advance_days, cancel_notice_minutes, align_to_clock';
 
 /**
  * Un slug siempre se guarda en minúsculas, así que /Barberia-Juan y

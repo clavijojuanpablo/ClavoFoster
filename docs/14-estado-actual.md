@@ -3,7 +3,7 @@
 > **Empieza por acá si vuelves al proyecto después de un tiempo, o si eres
 > alguien nuevo.** Este documento se actualiza al terminar cada tarea.
 >
-> Última actualización: 2026-09-14
+> Última actualización: 2026-09-15
 
 ## Retomar en cinco minutos
 
@@ -38,7 +38,7 @@ npm run typecheck
 
 ## Avance
 
-**21 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
+**24 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
 
 | Épica | Estado |
 |---|---|
@@ -47,13 +47,15 @@ npm run typecheck
 | B — Negocio y onboarding | B1, B3, B4 y B5 hechas. B2 pendiente |
 | C — Servicios | C1 hecha. C3 (categorías y orden) pendiente. C2 (buffers) salió del MVP |
 | D — Trabajadores y horarios | D1 a D4 hechas. D5 (invitación del trabajador) pendiente |
-| F, G, H, I, J, K | Sin empezar |
+| F — Reserva pública | F1, F2 y F3 hechas. Falta confirmar la cita: F4, F5 y F6 |
+| G, H, I, J, K | Sin empezar |
 
 ### Lo que ya funciona
 
 Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 
 - `/[slug]` — página pública del negocio, sin sesión. Ej. `/barberia-demo`
+- `/[slug]/reservar` — escoger servicio, persona, día y hora, con cupos reales
 - `/login`, `/registro`, `/bienvenida` — entrar, crear cuenta y crear el negocio
 - `/panel` — Inicio: citas de hoy, siguiente cita, caja del día y "Completa tu negocio"
 - `/panel/negocio` — perfil: página visible u oculta, datos, mapa, fotos, zona horaria
@@ -66,18 +68,24 @@ Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 Todo con el sistema de diseño de `15-sistema-de-diseno.md`: menú lateral en
 escritorio y barra inferior con hoja "Más" en celular.
 
-Comprobación: 256 pruebas en verde, `typecheck`, `lint` y `build` limpios.
+Comprobación: 274 pruebas en verde, `typecheck`, `lint` y `build` limpios.
 
 ### Qué sigue
 
-**La épica D quedó lista para el motor** (D5, la invitación del trabajador, es
-S y puede esperar). Lo siguiente es **F (reserva pública)**: donde el motor de
-cupos se conecta por fin con servicios, equipo, horarios y bloqueos, y `/[slug]`
-deja de ser una vitrina. B2 (el asistente por pasos) se cierra al final. No hay
-horario del local (decidido el 2026-09-14).
+**El motor ya está conectado con la base** (F2 y F3): `/[slug]/reservar` ofrece
+horas libres de verdad, calculadas con el horario de cada persona, sus citas y
+los bloqueos. Lo que falta para que una cita exista es **F4 y F5**: identificar
+al cliente por su celular y guardar la cita. El botón "Continuar" ya está en
+pantalla, apagado, esperando ese paso.
 
-Después: F (reserva pública), que es donde el motor de cupos por fin se conecta
-con la base y `/[slug]` deja de ser una vitrina.
+**F4 está bloqueada por una decisión, no por código:** el OTP va por WhatsApp
+Cloud API y todavía no hay credenciales de Meta (`WHATSAPP_TOKEN`,
+`WHATSAPP_PHONE_ID`). Hay que conseguirlas, o decidir un camino alterno para
+probar mientras llegan. Ver `09-notificaciones.md`.
+
+Después de F: G (panel y calendario), donde el dueño ve lo que le reservaron.
+B2 (el asistente por pasos) y C3 se cierran al final. No hay horario del local
+(decidido el 2026-09-14).
 
 **Pendiente antes de tener dueños reales: la confirmación de correo.** El
 proyecto parece exigir que el dueño confirme su correo, y el servicio de correo
@@ -190,6 +198,18 @@ Sin él, la pantalla se quedaba quieta hasta que llegaban los datos. Una secció
 nueva no necesita el suyo; si quiere uno propio, va en su carpeta. Ojo: lo que
 el layout del panel carga con cookies no lo cubre, así que el layout no debe
 sumar consultas lentas.
+
+**La disponibilidad pública se calcula con el cliente privilegiado.** Es el
+cuarto caso de uso de `lib/supabase/admin.ts`, además de los tres que lista su
+comentario: horarios, bloqueos y citas no son legibles para el anónimo —y así
+debe ser—, y el cliente final no tiene sesión que RLS pueda evaluar. Lo que
+queda en pie: el `business_id` sale del slug verificado, no del navegador, y de
+`lib/booking/disponibilidad.ts` solo salen horas libres.
+
+**En las pruebas, `server-only` es un módulo vacío.** Ese paquete existe para
+que el empaquetador reviente si un módulo de servidor se cuela en el navegador,
+y revienta también dentro de vitest, donde todo corre en Node. El alias está en
+`vitest.config.mts` y apunta a `tests/server-only.ts`.
 
 **`lib/scheduling` no tiene dependencias, ni siquiera de fechas.** La
 conversión de zona horaria son ~35 líneas con `Intl`. Se necesitaba una sola

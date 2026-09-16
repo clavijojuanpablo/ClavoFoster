@@ -61,7 +61,7 @@ reaccionar con cupos frescos, no con una pantalla de error.
 
 Sin sesión. En `app/(public)/[slug]/actions.ts`.
 
-### `getBusinessBySlug`
+### `getBusinessBySlug` — **hecho**, como `getNegocioPublico` en `lib/tenant.ts`
 
 ```ts
 function getBusinessBySlug(slug: string): Promise<Result<PublicBusiness>>;
@@ -81,34 +81,44 @@ Solo devuelve negocios con `is_published = true` y una suscripción en
 negocio suspendido por mora da `NOT_FOUND` — no "suspendido", porque el estado de
 pago del negocio no es asunto del cliente final.
 
-### `getAvailability`
+### `cuposDisponibles` — **hecho** (F2 y F3)
 
-**La operación más usada del producto.**
+**La operación más usada del producto.** En
+`app/(public)/[slug]/reservar/actions.ts`.
 
 ```ts
-function getAvailability(input: {
+function cuposDisponibles(input: {
   slug: string;
   serviceId: string;
-  staffId: string | null;      // null = cualquiera disponible
-  fromDate: string;            // 'YYYY-MM-DD', hora local del negocio
-  toDate: string;              // máximo 31 días de rango
-}): Promise<Result<{ days: AvailableDay[] }>>;
+  staffId: string;             // un uuid, o 'cualquiera' = el primero disponible
+  desde: string;               // 'YYYY-MM-DD', hora local del negocio
+}): Promise<{ ok: true; ventana: VentanaDeCupos } | { ok: false; error: string }>;
 
-type AvailableDay = {
-  date: string;                // 'YYYY-MM-DD'
-  slots: { startAt: string; staffId: string; staffName: string }[];
+type VentanaDeCupos = {
+  dias: { fecha: string; cupos: Cupo[] }[];
+  siguienteDesde: string | null;   // null: se llegó al tope de max_advance_days
 };
+
+type Cupo = { inicio: string; staffId: string; staffNombre: string };
 ```
 
-`startAt` es ISO 8601 en UTC. La conversión a hora local se hace al mostrar,
+`inicio` es ISO 8601 en UTC. La conversión a hora local se hace al mostrar,
 usando `timezone` del negocio.
 
-Con `staffId: null` se combinan los cupos de todos los trabajadores habilitados
-para ese servicio y, si dos coinciden en la misma hora, se devuelve uno solo —
-el de menor carga ese día, para repartir el trabajo.
+**Solo entra el primer día, no el rango.** Cuántos días trae cada tanda lo decide
+el servidor (`DIAS_POR_VENTANA`, catorce), así que nadie puede pedir un año de
+una. El tope duro de la consulta son 31 días; pedir un año entero es lo que
+convierte esta operación en el cuello de botella.
 
-Rango máximo de 31 días por llamada: pedir un año entero es lo que convierte
-esta operación en el cuello de botella.
+Con `staffId: 'cualquiera'` se combinan los cupos de todos los trabajadores
+habilitados para ese servicio y, si dos coinciden en la misma hora, se devuelve
+uno solo — el de menor carga ese día, para repartir el trabajo.
+
+El cálculo está en `lib/booking/disponibilidad.ts`. Es el único punto del flujo
+público que usa el cliente privilegiado de Supabase, porque horarios, bloqueos y
+citas no son legibles para el anónimo y el cliente final no tiene sesión que RLS
+pueda evaluar. Las dos barreras que quedan en su lugar: el `business_id` sale
+del slug verificado, y hacia afuera solo salen horas libres.
 
 ### `requestOtp` y `verifyOtp`
 

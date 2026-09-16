@@ -29,13 +29,13 @@ quien la hizo.
 | C. Servicios | 2 | 1 | En curso |
 | D. Trabajadores y horarios | 5 | 4 | En curso |
 | E. Motor de agendamiento | 5 | 5 | **Hecho** |
-| F. Reserva pública | 6 | 0 | Pendiente |
+| F. Reserva pública | 6 | 3 | En curso |
 | G. Panel y calendario | 6 | 0 | Pendiente |
 | H. Contabilidad | 5 | 0 | Pendiente |
 | I. Notificaciones | 5 | 0 | Pendiente |
 | J. Suscripciones | 6 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **55** | **21** | |
+| **Total MVP** | **55** | **24** | |
 
 ## Orden de ejecución
 
@@ -341,12 +341,20 @@ lógica en la aplicación.
 
 | ID | Tarea | Pri | Estado |
 |---|---|---|---|
-| F1 | Página pública del negocio en `/[slug]` | M | Pendiente |
-| F2 | Selección de servicio y de trabajador (con "el primero disponible") | M | Pendiente |
-| F3 | Calendario de cupos disponibles | M | Pendiente |
+| F1 | Página pública del negocio en `/[slug]` | M | **Hecho** |
+| F2 | Selección de servicio y de trabajador (con "el primero disponible") | M | **Hecho** |
+| F3 | Calendario de cupos disponibles | M | **Hecho** |
 | F4 | Identificación por celular con OTP de WhatsApp | M | Pendiente |
 | F5 | Alta de cliente nuevo (solo nombre) y reconocimiento del que vuelve | M | Pendiente |
 | F6 | Página de gestión de la cita: cancelar y reprogramar por link | M | Pendiente |
+
+**F2 y F3 — Cómo quedaron.** Todo en una sola pantalla que va creciendo
+(`/[slug]/reservar`), no en un asistente con "siguiente": en un celular, cambiar
+el servicio tiene que ser tocar el servicio. El catálogo entero viaja en el
+primer render y lo único que se pide sobre la marcha son los cupos, en tandas de
+catorce días. El cálculo vive en `lib/booking/disponibilidad.ts`, que es lo único
+del flujo público que usa el cliente privilegiado: hacia afuera solo salen horas
+libres. El paso de confirmar está en pantalla pero apagado hasta F4.
 
 **F4 — OTP por WhatsApp.** Ver `09-notificaciones.md`. Criterios:
 - Código de 6 dígitos, válido 10 minutos, máximo 5 intentos.

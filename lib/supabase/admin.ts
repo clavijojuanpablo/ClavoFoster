@@ -13,9 +13,9 @@ import type { Database } from '@/lib/types/database';
  *
  * USO PERMITIDO, y en ningún otro lugar:
  *
- *   1. Crear una cita desde la página pública de reservas.
- *      El cliente final no tiene sesión, así que no hay identidad que RLS
- *      pueda evaluar.
+ *   1. La reserva desde la página pública: calcular los cupos libres
+ *      (`lib/booking/disponibilidad.ts`) y crear la cita. El cliente final no
+ *      tiene sesión, así que no hay identidad que RLS pueda evaluar.
  *   2. Procesar webhooks entrantes (pasarela de pagos, WhatsApp).
  *      Los origina un tercero, no un usuario autenticado.
  *   3. Trabajos programados (recordatorios, limpieza de retenciones vencidas).
