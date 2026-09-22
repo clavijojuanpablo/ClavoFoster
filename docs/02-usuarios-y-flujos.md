@@ -83,8 +83,9 @@ Lo que hace al abrir el celular, en orden:
 **En la mañana.** Abre la PWA. Ve las citas de hoy en una lista: hora, cliente,
 servicio, trabajador. Ve si alguien canceló en la noche.
 
-**Durante el día.** Entra alguien sin cita: la agenda a mano desde el panel,
-escogiendo un cliente existente o creando uno nuevo con solo el celular. Un
+**Durante el día.** Entra alguien sin cita: la agenda a mano desde el panel
+escribiendo el celular; si ya es cliente se reconoce solo, y si es nuevo basta
+con el nombre. Un
 cliente llama a mover su cita: la arrastra a otra hora en el calendario y el
 sistema le avisa solo al cliente.
 
@@ -109,6 +110,7 @@ Puede:
 
 - Ver sus citas del día y de la semana.
 - Marcar cumplida o no asistió.
+- Agendar una cita consigo mismo, para el que llama o llega sin reservar.
 - Bloquear un rato ("almuerzo", "cita médica") si el dueño le dio permiso.
 - Ver el historial y las notas del cliente que sigue ("el 3 a los lados", "no le
   gusta la máquina en la nuca").

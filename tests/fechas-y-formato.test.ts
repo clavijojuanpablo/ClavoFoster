@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { colorDeServicio } from '@/lib/colores';
-import { fechaLocal, fechasEntre, rangoDelDia, saludo, sumarDias } from '@/lib/fechas';
+import { fechaLocal, fechasEntre, instanteLocal, rangoDelDia, relojLocal, saludo, sumarDias } from '@/lib/fechas';
 import { cuandoEsElBloqueo, duracion, fechaCorta, fechaLarga, hora, iniciales, pesos } from '@/lib/formato';
 
 describe('fechaLocal', () => {
@@ -117,5 +117,76 @@ describe('espacios de Intl', () => {
 
   it('la hora se sigue leyendo como debe', () => {
     expect(hora('America/Bogota', new Date('2026-09-16T15:30:00Z'))).toBe('10:30 a. m.');
+  });
+});
+
+describe('instanteLocal y relojLocal', () => {
+  it('lee la hora escrita en la zona del negocio', () => {
+    expect(instanteLocal('America/Bogota', '2026-09-12', '15:07').toISOString()).toBe('2026-09-12T20:07:00.000Z');
+  });
+
+  it('va y vuelve sin perder un minuto', () => {
+    const instante = instanteLocal('America/Bogota', '2026-09-12', '09:05');
+    expect(relojLocal('America/Bogota', instante)).toBe('09:05');
+    expect(relojLocal('America/Bogota', new Date('2026-09-13T04:59:00Z'))).toBe('23:59');
+  });
+});
+
+describe('instanteLocal y relojLocal en los bordes', () => {
+  it('la medianoche de Bogotá son las 5 de la mañana en UTC, y el reloj marca 00:00 y no 24:00', () => {
+    const medianoche = instanteLocal('America/Bogota', '2026-09-12', '00:00');
+    expect(medianoche.toISOString()).toBe('2026-09-12T05:00:00.000Z');
+    expect(relojLocal('America/Bogota', medianoche)).toBe('00:00');
+  });
+
+  it('las 7 de la noche en Bogotá ya son el día siguiente en UTC, pero siguen siendo las 19:00 del día local', () => {
+    const noche = instanteLocal('America/Bogota', '2026-09-12', '19:00');
+    expect(noche.toISOString()).toBe('2026-09-13T00:00:00.000Z');
+    expect(relojLocal('America/Bogota', noche)).toBe('19:00');
+    expect(fechaLocal('America/Bogota', noche)).toBe('2026-09-12');
+  });
+
+  it('el reloj corta los segundos, no redondea al minuto siguiente', () => {
+    expect(relojLocal('America/Bogota', new Date('2026-09-12T15:07:59.999Z'))).toBe('10:07');
+  });
+
+  it('en Nueva York, el día que se adelanta la hora, las 3:00 ya son horario de verano', () => {
+    // 2026-03-08: a las 2:00 EST el reloj salta a las 3:00 EDT (UTC-4).
+    expect(instanteLocal('America/New_York', '2026-03-08', '01:59').toISOString()).toBe('2026-03-08T06:59:00.000Z');
+    expect(instanteLocal('America/New_York', '2026-03-08', '03:00').toISOString()).toBe('2026-03-08T07:00:00.000Z');
+    expect(relojLocal('America/New_York', new Date('2026-03-08T07:00:00Z'))).toBe('03:00');
+  });
+
+  it('en Nueva York, el día que se atrasa la hora, la 1:30 repetida se lee como la primera y el reloj marca las dos igual', () => {
+    // 2026-11-01: a las 2:00 EDT el reloj vuelve a la 1:00 EST.
+    expect(instanteLocal('America/New_York', '2026-11-01', '01:30').toISOString()).toBe('2026-11-01T05:30:00.000Z');
+    expect(relojLocal('America/New_York', new Date('2026-11-01T05:30:00Z'))).toBe('01:30');
+    expect(relojLocal('America/New_York', new Date('2026-11-01T06:30:00Z'))).toBe('01:30');
+    expect(instanteLocal('America/New_York', '2026-11-01', '09:00').toISOString()).toBe('2026-11-01T14:00:00.000Z');
+  });
+
+  it('en Santiago, donde la hora salta a medianoche, la 1:00 del día del cambio cae en su día', () => {
+    // 2026-09-06: el sábado a las 24:00 (UTC-4) el reloj pasa a la 1:00 (UTC-3).
+    const primera = instanteLocal('America/Santiago', '2026-09-06', '01:00');
+    expect(primera.toISOString()).toBe('2026-09-06T04:00:00.000Z');
+    expect(fechaLocal('America/Santiago', primera)).toBe('2026-09-06');
+    expect(relojLocal('America/Santiago', primera)).toBe('01:00');
+  });
+
+  it('una hora de trabajo cualquiera va y vuelve igual antes y después de cada cambio de horario', () => {
+    for (const [tz, fecha] of [
+      ['America/New_York', '2026-03-07'],
+      ['America/New_York', '2026-03-08'],
+      ['America/New_York', '2026-11-01'],
+      ['America/New_York', '2026-11-02'],
+      ['America/Santiago', '2026-04-05'],
+      ['America/Santiago', '2026-09-06'],
+    ] as const) {
+      for (const reloj of ['09:00', '12:30', '18:45', '23:59']) {
+        const instante = instanteLocal(tz, fecha, reloj);
+        expect(relojLocal(tz, instante), `${tz} ${fecha} ${reloj}`).toBe(reloj);
+        expect(fechaLocal(tz, instante), `${tz} ${fecha} ${reloj}`).toBe(fecha);
+      }
+    }
   });
 });

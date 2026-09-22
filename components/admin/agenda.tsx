@@ -1,11 +1,14 @@
 'use client';
 
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Calendario } from '@/components/admin/calendario';
 import { DetalleCita } from '@/components/admin/detalle-cita';
+import { NuevaCita } from '@/components/admin/nueva-cita';
+import { Button } from '@/components/ui/button';
+import type { ServicioReservable } from '@/lib/booking/tipos';
 import { fechaLarga } from '@/lib/formato';
 import { sumarDias } from '@/lib/fechas';
 import { lunesDeLaSemana, type CitaEnAgenda, type DatosAgenda } from '@/lib/agenda/tipos';
@@ -13,7 +16,8 @@ import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
 /**
- * La agenda: controles, calendario y detalle de la cita (G1, G2 y G5).
+ * La agenda: controles, calendario, detalle de la cita y cita nueva (G1, G2, G3
+ * y G5).
  *
  * Todo el estado de "qué se está mirando" vive en la URL, no en React. Así el
  * botón de atrás del navegador funciona, un link a un día concreto se puede
@@ -26,16 +30,28 @@ export function Agenda({
   hoy,
   businessId,
   puedeEditar,
+  catalogo,
 }: {
   datos: DatosAgenda;
   timezone: string;
   hoy: string;
   businessId: string;
   puedeEditar: boolean;
+  /** Lo que se puede agendar desde el panel. */
+  catalogo: ServicioReservable[];
 }) {
   const router = useRouter();
   const params = useSearchParams();
   const [abierta, setAbierta] = useState<CitaEnAgenda | null>(null);
+  const [creando, setCreando] = useState(false);
+  // El "+" de la barra del celular llega con ?nueva=1, desde cualquier pantalla.
+  const pedidaPorLink = params.get('nueva') === '1';
+  const hojaNueva = puedeEditar && (creando || pedidaPorLink);
+
+  function cerrarNueva(cambios: Record<string, string | null> = {}) {
+    setCreando(false);
+    if (pedidaPorLink || Object.keys(cambios).length > 0) ir({ ...cambios, nueva: null });
+  }
 
   useRefrescoEnVivo(businessId, () => router.refresh());
 
@@ -102,6 +118,13 @@ export function Agenda({
             </button>
           ))}
         </div>
+
+        {puedeEditar && (
+          <Button size="sm" className="h-9" onClick={() => setCreando(true)}>
+            <Plus />
+            Nueva cita
+          </Button>
+        )}
       </div>
 
       {/*
@@ -135,6 +158,19 @@ export function Agenda({
           timezone={timezone}
           puedeEditar={puedeEditar}
           onCerrar={() => setAbierta(null)}
+        />
+      )}
+
+      {hojaNueva && (
+        <NuevaCita
+          catalogo={catalogo}
+          timezone={timezone}
+          hoy={hoy}
+          fechaInicial={datos.fecha}
+          personaInicial={datos.trabajadores.length === 1 ? (datos.trabajadores[0]?.id ?? null) : null}
+          onCerrar={() => cerrarNueva()}
+          // La cita recién hecha tiene que verse: se va al día en que quedó.
+          onCreada={(fecha) => cerrarNueva(fecha !== datos.fecha ? { fecha } : {})}
         />
       )}
     </div>

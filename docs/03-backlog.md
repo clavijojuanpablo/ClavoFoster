@@ -30,12 +30,12 @@ quien la hizo.
 | D. Trabajadores y horarios | 5 | 4 | En curso |
 | E. Motor de agendamiento | 5 | 5 | **Hecho** |
 | F. Reserva pública | 6 | 6 | **Hecho** |
-| G. Panel y calendario | 6 | 3 | En curso |
+| G. Panel y calendario | 6 | 4 | En curso |
 | H. Contabilidad | 5 | 0 | Pendiente |
 | I. Notificaciones | 5 | 0 | Pendiente |
 | J. Suscripciones | 8 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **57** | **30** | |
+| **Total MVP** | **57** | **31** | |
 
 ## Orden de ejecución
 
@@ -410,7 +410,7 @@ red móvil. Se mide, no se supone.
 |---|---|---|---|
 | G1 | Calendario día y semana, por trabajador y en columnas | M | **Hecho** |
 | G2 | Detalle de la cita y datos del cliente | M | **Hecho** |
-| G3 | Crear cita manual desde el panel | M | Pendiente |
+| G3 | Crear cita manual desde el panel | M | **Hecho** |
 | G4 | Reprogramar arrastrando, y cancelar | M | Pendiente |
 | G5 | Cambios de estado: cumplida, no asistió, cancelada | M | **Hecho** |
 | G6 | PWA instalable (manifest, íconos, pantalla de carga) | M | Pendiente |
@@ -434,6 +434,34 @@ corto se ven sin abrir el horario.
 lógica pura** con sus pruebas. La restricción de la base impide que dos citas
 *activas* se crucen, pero una cumplida y una nueva confirmada sí pueden convivir
 a la misma hora, y una pantalla que dibuje una encima de otra estaría mintiendo.
+
+**G3 — Cita manual.** Cerrada el 2026-09-22, probada a mano en local. Botón
+**Nueva cita** en `/panel/agenda`,
+que abre una hoja con servicio, persona, día, hora, celular del cliente y nota
+interna. Criterios:
+- Sirve para el que **llamó** (`source = 'manual'`) y para el que **llegó sin
+  cita** (`walk_in`, que pone hoy y la hora de ahora).
+- Las horas libres del motor se sugieren, pero la hora se puede escribir a mano,
+  a cualquier minuto, fuera de horario y sin anticipación mínima. Lo único que no
+  se salta es la restricción de solapamiento: la misma persona no queda en dos
+  citas a la vez, y si choca, la hoja lo dice y recarga las horas.
+- El celular reconoce al cliente que vuelve, sin pisarle el nombre, y avisa si
+  está bloqueado o si ha faltado antes. Si es nuevo, pide solo el nombre.
+- Precio y duración se copian en el servidor, con el número propio de la persona
+  si lo tiene. La cita nace confirmada.
+- El trabajador solo agenda consigo mismo.
+- Al que llamó le llega `booking_confirmed` con su link para mover o cancelar,
+  si la cita es a futuro. Al que llegó sin cita, o a una cita que se registra ya
+  pasada, no se le manda nada.
+- En celular se entra también con el **+** de la barra inferior, desde cualquier
+  pantalla (`/panel/agenda?nueva=1`).
+
+Todo con la sesión del usuario y RLS: `lib/booking/disponibilidad.ts` recibe el
+cliente con sesión en vez del privilegiado. La excepción es el registro del aviso
+por WhatsApp, que como en la reserva pública pasa por `lib/notifications` con el
+cliente privilegiado. Quedó fuera a propósito: agendar
+tocando un hueco del calendario, buscar clientes por nombre, y agendar varios
+servicios seguidos en una sola cita.
 
 **G5 — Estados.** Hecho en el detalle de la cita. Marcar **cumplida** dispara el
 asiento de ingreso de la épica H, y por eso el `update` exige que la cita no esté

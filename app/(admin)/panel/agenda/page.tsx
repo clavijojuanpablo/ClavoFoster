@@ -1,6 +1,7 @@
 import { Agenda } from '@/components/admin/agenda';
 import { fechaLocal } from '@/lib/fechas';
 import { obtenerAgenda, type VistaAgenda } from '@/lib/panel/agenda';
+import { catalogoParaAgendar } from '@/lib/panel/nueva-cita';
 import { requireNegocio } from '@/lib/tenant';
 
 export const metadata = { title: 'Agenda' };
@@ -31,7 +32,12 @@ export default async function AgendaPage({ searchParams }: Props) {
   const fecha = params.fecha && FECHA.test(params.fecha) ? params.fecha : hoy;
   const vista: VistaAgenda = params.vista === 'semana' ? 'semana' : 'dia';
 
-  const datos = await obtenerAgenda(contexto, { fecha, vista, trabajador: params.trabajador ?? null });
+  // El catálogo para "Nueva cita" viene en paralelo: son dos consultas más que
+  // no alargan la carga, y así la hoja abre al instante.
+  const [datos, catalogo] = await Promise.all([
+    obtenerAgenda(contexto, { fecha, vista, trabajador: params.trabajador ?? null }),
+    catalogoParaAgendar(contexto),
+  ]);
 
   return (
     <main className="flex flex-col gap-4 px-4 pt-5 lg:px-8 lg:pt-7 lg:pb-8">
@@ -48,6 +54,7 @@ export default async function AgendaPage({ searchParams }: Props) {
         hoy={hoy}
         businessId={negocio.id}
         puedeEditar
+        catalogo={catalogo}
       />
     </main>
   );

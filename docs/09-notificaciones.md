@@ -49,7 +49,7 @@ aprobada por ellos**. No se puede mandar texto libre.
 | Plantilla | Categoría | Cuándo | Para quién |
 |---|---|---|---|
 | `auth_otp` | Autenticación | Al pedir el código de verificación | Cliente |
-| `booking_confirmed` | Utilidad | Al confirmar la reserva | Cliente |
+| `booking_confirmed` | Utilidad | Al confirmar la reserva en línea, o al agendar desde el panel al que llamó (cita futura, `source = 'manual'`) | Cliente |
 | `reminder_24h` | Utilidad | 24 h antes | Cliente |
 | `reminder_2h` | Utilidad | 2 h antes | Cliente |
 | `booking_cancelled` | Utilidad | Al cancelar | Cliente |

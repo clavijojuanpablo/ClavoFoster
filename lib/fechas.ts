@@ -1,4 +1,4 @@
-import { aInstanteUtc, partirFecha } from '@/lib/scheduling/timezone';
+import { aInstanteUtc, minutosDesdeMedianocheLocal, partirFecha, partirHora } from '@/lib/scheduling/timezone';
 
 /**
  * "Hoy" siempre es el hoy del NEGOCIO, no el del servidor (UTC en Vercel) ni el
@@ -74,4 +74,19 @@ export function saludo(timezone: string, instante: Date): string {
   if (hora < 12) return 'Buenos días';
   if (hora < 19) return 'Buenas tardes';
   return 'Buenas noches';
+}
+
+/** El instante UTC de una fecha y una hora de reloj ('HH:MM') escritas en la zona del negocio. */
+export function instanteLocal(timezone: string, fecha: string, horaDelReloj: string): Date {
+  const { año, mes, dia } = partirFecha(fecha);
+  const { hora, minuto } = partirHora(horaDelReloj);
+
+  return aInstanteUtc(timezone, año, mes, dia, hora, minuto);
+}
+
+/** La hora de reloj 'HH:MM' de un instante en la zona del negocio. Lo que espera un `<input type="time">`. */
+export function relojLocal(timezone: string, instante: Date): string {
+  const minutos = minutosDesdeMedianocheLocal(timezone, instante);
+
+  return `${String(Math.floor(minutos / 60)).padStart(2, '0')}:${String(minutos % 60).padStart(2, '0')}`;
 }

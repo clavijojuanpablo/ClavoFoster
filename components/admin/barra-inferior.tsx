@@ -48,14 +48,14 @@ export function BarraInferior({ negocio, plan, urlPublica, rol }: DatosMenu) {
         <ElementoBarra item={inicio} activo={!masAbierto && esRutaActiva(ruta, inicio.href)} />
         <ElementoBarra item={agenda} activo={!masAbierto && esRutaActiva(ruta, agenda.href)} />
         <div className="flex justify-center">
-          {/* Crear cita desde el panel llega con la tarea G3. */}
-          <span
-            aria-disabled="true"
-            aria-label="Nueva cita (pronto)"
-            className="flex size-[52px] items-center justify-center rounded-[18px] bg-lima text-tinta opacity-40"
+          {/* Abre la hoja de "Nueva cita" de la agenda (G3), desde cualquier pantalla. */}
+          <Link
+            href="/panel/agenda?nueva=1"
+            aria-label="Nueva cita"
+            className="flex size-[52px] items-center justify-center rounded-[18px] bg-lima text-tinta transition active:scale-95"
           >
             <Plus className="size-6" strokeWidth={2.4} />
-          </span>
+          </Link>
         </div>
         {rol === 'owner' ? (
           <ElementoBarra item={caja} activo={!masAbierto && esRutaActiva(ruta, caja.href)} />

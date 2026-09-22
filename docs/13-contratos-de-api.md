@@ -240,6 +240,42 @@ function setAppointmentStatus(input: {
 pero **no** la restricción de solapamiento: el dueño puede agendar para dentro de
 5 minutos, pero no puede poner a un barbero en dos lugares al tiempo.
 
+Implementada en G3 en `app/(admin)/panel/agenda/actions.ts`, con la forma de
+unión simple del resto del módulo en vez de `Result<T>`:
+
+```ts
+// La hora llega como reloj local ('YYYY-MM-DD' + 'HH:MM') y se vuelve UTC en el
+// servidor con businesses.timezone. El cliente se identifica por celular: si ya
+// existe en el negocio se reusa, si no se crea con `nombre`.
+function crearCitaDesdePanel(input: {
+  serviceId: string; staffId: string; fecha: string; hora: string;
+  telefono: string; nombre: string; nota: string;
+  origen: 'manual' | 'walk_in';
+}): Promise<{ ok: true } | { ok: false; error: string; campos: Record<string, string>; cupoOcupado?: true }>;
+
+// Horas libres del motor para un día, como sugerencia. No limitan la hora.
+function cuposParaNuevaCita(input: { serviceId: string; staffId: string; fecha: string }):
+  Promise<{ ok: true; cupos: { reloj: string; etiqueta: string }[] } | { ok: false; error: string }>;
+
+// El cliente de ESTE negocio con ese celular, o null.
+function buscarClienteParaCita(input: { telefono: string }):
+  Promise<{ ok: true; cliente: ClienteConocido | null; telefono: string } | { ok: false; error: string }>;
+```
+
+En la práctica la cita manual se salta las reglas de **tiempo** de la reserva:
+anticipación, ventana, horario de la persona, bloqueos y ausencias (incluido el
+cierre del local) y hora pasada. Sí exige que el servicio esté activo y que la
+persona, activa, lo preste. Aparte de eso, solo la frena el solapamiento con otra
+cita `pending` o `confirmed` de la misma persona, buffers incluidos. Es a
+propósito: el dueño que atiende a su primo el domingo cerrado sabe lo que hace.
+Las horas sugeridas sí respetan horario, bloqueos y citas activas, y descartan
+las que ya pasaron. No aplican la anticipación mínima, y la ventana se estira a
+366 días.
+
+Con `origen: 'manual'` y una hora futura se manda `booking_confirmed` con el link
+de gestión; con `walk_in` o con una hora que ya pasó, no. El trabajador solo
+puede agendar con su propio `staffId`.
+
 **`setAppointmentStatus` con `completed` es la operación que alimenta la
 contabilidad.** Crea el movimiento de ingreso y es **idempotente**: el índice
 único sobre `appointment_id` en `ledger_entries` garantiza que un doble clic no

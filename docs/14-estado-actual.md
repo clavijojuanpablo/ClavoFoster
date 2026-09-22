@@ -3,7 +3,7 @@
 > **Empieza por acá si vuelves al proyecto después de un tiempo, o si eres
 > alguien nuevo.** Este documento se actualiza al terminar cada tarea.
 >
-> Última actualización: 2026-09-16
+> Última actualización: 2026-09-22
 
 ## Retomar en cinco minutos
 
@@ -38,7 +38,7 @@ npm run typecheck
 
 ## Avance
 
-**30 de 57 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
+**31 de 57 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
 
 | Épica | Estado |
 |---|---|
@@ -48,7 +48,7 @@ npm run typecheck
 | C — Servicios | C1 hecha. C3 (categorías y orden) pendiente. C2 (buffers) salió del MVP |
 | D — Trabajadores y horarios | D1 a D4 hechas. D5 (invitación del trabajador) pendiente |
 | **F — Reserva pública** | **Completa** |
-| G — Panel y calendario | G1, G2 y G5 hechas. Faltan G3, G4 y G6 |
+| G — Panel y calendario | G1, G2, G3 y G5 hechas. Faltan G4 y G6 |
 | H, I, J, K | Sin empezar |
 
 ### Lo que ya funciona
@@ -65,7 +65,8 @@ Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 - `/panel/servicios` — crear, editar, desactivar y reactivar servicios
 - `/panel/equipo` — el equipo, los servicios que presta y el horario semanal de cada persona
 - `/panel/agenda` — **el calendario**: día y semana, una columna por persona,
-  detalle de la cita y marcarla cumplida o no llegó. Se actualiza sola cuando
+  detalle de la cita, marcarla cumplida o no llegó, y **Nueva cita** para el que
+  llama o llega sin reservar. Se actualiza sola cuando
   alguien reserva
 - `/panel/equipo/ausencias` — bloqueos y cierres del local, con aviso de citas afectadas
 - `/api/cron/cleanup-holds` — libera retenciones vencidas (nadie lo llama aún)
@@ -74,7 +75,7 @@ Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 Todo con el sistema de diseño de `15-sistema-de-diseno.md`: menú lateral en
 escritorio y barra inferior con hoja "Más" en celular.
 
-Comprobación: 312 pruebas en verde, `typecheck`, `lint` y `build` limpios.
+Comprobación: 342 pruebas en verde, `typecheck`, `lint` y `build` limpios.
 
 ### Qué sigue
 
@@ -93,14 +94,13 @@ del código lo avisa mientras esté así. Hay que sacar el número y las plantil
 con Meta; es trámite, no programación, y conviene empezarlo ya porque la
 aprobación tarda. Ver `09-notificaciones.md`.
 
-**El dueño ya tiene dónde ver lo que le reservaron** (G1, G2 y G5). El
+**El dueño ya tiene dónde ver lo que le reservaron** (G1, G2, G3 y G5). El
 calendario está en `/panel/agenda`, con vista de día y de semana, y se
 actualiza solo si alguien reserva mientras lo tiene abierto.
 
-De la épica G faltan tres:
+**G3 — crear cita manual — está hecha.** El que llama o llega sin reservar
+entra a la agenda con **Nueva cita**. Quedan dos de la épica G:
 
-- **G3 — crear cita manual.** Es la que más falta hace: el cliente que llega sin
-  reservar o el que llama por teléfono no tiene cómo entrar a la agenda.
 - **G4 — reprogramar arrastrando.** Cancelar ya está; falta el arrastre.
 - **G6 — PWA instalable.**
 
@@ -112,6 +112,25 @@ proyecto parece exigir que el dueño confirme su correo, y el servicio de correo
 que trae Supabase por defecto no le entrega a direcciones reales. O se apaga la
 confirmación, o se configura Resend como servidor de correo. El código funciona
 con las dos.
+
+**⚠️ Hueco entre negocios en `appointments`, encontrado el 2026-09-21.** Sus
+llaves a `customers`, `staff` y `services` son simples, no compuestas con
+`business_id` como las de `20260914150001_equipo.sql`. Un miembro del negocio A,
+llamando a la base directo con su sesión, puede crear una cita suya sobre un
+barbero de B (el id sale en la página pública de B), y la restricción de
+solapamiento le bloquea esas horas a B sin que B vea por qué. La aplicación no
+lo permite —cruza los ids con el negocio de la sesión—, pero la regla 1 dice que
+lo garantiza la base. Arreglo: `unique (id, business_id)` en `customers` y las
+tres llaves compuestas, con su caso en `tests/aislamiento.test.ts`. Va en su
+propia rama `fix/`, antes de un cliente real.
+
+**Horario de verano: una hora que no existe se corre hacia atrás.**
+`aInstanteUtc` (`lib/scheduling/timezone.ts`), el día que el reloj se adelanta,
+devuelve la hora de antes del salto. Donde el salto es a medianoche (Santiago de
+Chile), el día empieza a las 23:00 del anterior. En Colombia no pasa, porque no
+hay horario de verano. Antes de vender fuera del país: devolver el instante más
+tardío de los dos candidatos (lo que hace `Temporal` en modo `compatible`), con
+la prueba de Santiago y el ajuste en `06-motor-de-agendamiento.md`.
 
 **Negocios en prueba:** su página pública es visible (decidido el 2026-09-12). Se
 apaga solo al pasar a `suspended`. Ojo: mientras no exista el trabajo programado
@@ -230,7 +249,9 @@ cuarto caso de uso de `lib/supabase/admin.ts`, además de los tres que lista su
 comentario: horarios, bloqueos y citas no son legibles para el anónimo —y así
 debe ser—, y el cliente final no tiene sesión que RLS pueda evaluar. Lo que
 queda en pie: el `business_id` sale del slug verificado, no del navegador, y de
-`lib/booking/disponibilidad.ts` solo salen horas libres.
+`lib/booking/disponibilidad.ts` solo salen horas libres. Desde G3, el panel usa
+el mismo motor con el cliente de la sesión (`cliente?` en `obtenerDisponibilidad`
+y `obtenerCatalogoReservable`).
 
 **El OTP no se guarda: se guarda su HMAC, con la llave secreta de Supabase.** Se
 reutiliza esa llave en vez de pedir otra variable de entorno: ya es secreta, ya

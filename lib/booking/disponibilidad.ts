@@ -34,6 +34,16 @@ export type { Cupo, DiaDisponible, ServicioReservable, TrabajadorDelServicio, Ve
 export const DIAS_MAX_POR_CONSULTA = 31;
 
 /**
+ * Con qué cliente de Supabase se consulta.
+ *
+ * El flujo público no manda ninguno y se usa el privilegiado, porque el cliente
+ * final no tiene sesión que RLS pueda evaluar. El panel sí manda el suyo —el de
+ * la sesión del dueño— para que RLS siga protegiendo: el mismo motor, pero sin
+ * la llave maestra donde no hace falta. Ver `docs/12-convenciones-de-desarrollo.md`.
+ */
+type ClienteSupabase = ReturnType<typeof createAdminClient>;
+
+/**
  * Lo reservable del negocio: los servicios activos, cada uno con la gente que
  * lo presta.
  *
@@ -45,8 +55,11 @@ export const DIAS_MAX_POR_CONSULTA = 31;
  * Un servicio que no presta nadie sale con `trabajadores: []`. Existe, pero no
  * se puede reservar todavía, y eso se le explica al cliente.
  */
-export async function obtenerCatalogoReservable(negocio: NegocioPublico): Promise<ServicioReservable[]> {
-  const supabase = createAdminClient();
+export async function obtenerCatalogoReservable(
+  negocio: NegocioPublico,
+  cliente?: ClienteSupabase,
+): Promise<ServicioReservable[]> {
+  const supabase = cliente ?? createAdminClient();
 
   const [{ data: servicios, error: errorServicios }, { data: presta, error: errorPresta }] = await Promise.all([
     supabase
@@ -110,6 +123,7 @@ export async function obtenerDisponibilidad(input: {
   desde: string;
   hasta: string;
   ahora: Date;
+  cliente?: ClienteSupabase;
 }): Promise<DiaDisponible[]> {
   const { negocio, servicio, staffId, desde, hasta, ahora } = input;
 
@@ -128,7 +142,7 @@ export async function obtenerDisponibilidad(input: {
   const ventanaDesde = rangoDelDia(negocio.timezone, fechas[0]).desde;
   const ventanaHasta = rangoDelDia(negocio.timezone, fechas[fechas.length - 1]).hasta;
 
-  const supabase = createAdminClient();
+  const supabase = input.cliente ?? createAdminClient();
 
   const [
     { data: horarios, error: errorHorarios },
@@ -266,6 +280,7 @@ export async function obtenerVentanaDeCupos(input: {
   staffId: string | null;
   desde: string;
   ahora: Date;
+  cliente?: ClienteSupabase;
 }): Promise<VentanaDeCupos> {
   const { negocio, servicio, staffId, desde, ahora } = input;
 
@@ -275,7 +290,7 @@ export async function obtenerVentanaDeCupos(input: {
 
   if (hasta < desde) return { dias: [], siguienteDesde: null };
 
-  const dias = await obtenerDisponibilidad({ negocio, servicio, staffId, desde, hasta, ahora });
+  const dias = await obtenerDisponibilidad({ negocio, servicio, staffId, desde, hasta, ahora, cliente: input.cliente });
   const siguiente = sumarDias(hasta, 1);
 
   return { dias, siguienteDesde: siguiente <= ultimoDia ? siguiente : null };

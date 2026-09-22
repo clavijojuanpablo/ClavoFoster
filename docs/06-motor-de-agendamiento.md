@@ -222,7 +222,9 @@ horarios quedan corridos.
 `America/Bogota`). Nunca la del servidor, que en Vercel es UTC, ni la del
 navegador, que es la del cliente y puede estar viajando.
 
-Colombia no tiene horario de verano, así que hoy este problema está dormido.
+Colombia no tiene horario de verano, así que hoy este problema está dormido,
+con un bug conocido en `aInstanteUtc` para las horas que no existen (ver el aviso
+en `14-estado-actual.md`).
 Despierta el día que entre un negocio en Chile o en México. Hacerlo bien ahora
 cuesta nada; arreglarlo después cuesta migrar datos en producción.
 

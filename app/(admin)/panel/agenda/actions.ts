@@ -3,8 +3,26 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+import { instanteLocal } from '@/lib/fechas';
+import {
+  buscarClientePorTelefono,
+  catalogoParaAgendar,
+  crearCitaManual,
+  cuposSugeridos,
+  type ClienteConocido,
+  type CupoSugerido,
+} from '@/lib/panel/nueva-cita';
 import { createClient } from '@/lib/supabase/server';
 import { requireNegocio } from '@/lib/tenant';
+import { erroresPorCampo } from '@/lib/validation/negocio';
+import {
+  esquemaBuscarCliente,
+  esquemaCuposPanel,
+  esquemaNuevaCita,
+  type PeticionDeCuposPanel,
+  type PeticionDeNuevaCita,
+} from '@/lib/validation/nueva-cita';
+import { normalizarCelular } from '@/lib/validation/telefono';
 
 /**
  * Lo que el negocio hace con una cita desde la agenda (G5).
@@ -72,5 +90,101 @@ export async function cambiarEstadoDeCita(peticion: {
   // `data` nulo significa que ya estaba así. Para quien lo pidió, está hecho.
   if (data) revalidatePath('/panel/agenda');
 
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Cita manual (G3)
+// ---------------------------------------------------------------------------
+
+/**
+ * Lo que la hoja de "Nueva cita" le pide al servidor.
+ *
+ * Ids de servicio y persona llegan del navegador, así que se cruzan siempre con
+ * el catálogo del negocio de la sesión: uno de otro negocio no aparece ahí y no
+ * se agenda. La zona horaria para leer la hora escrita también sale del
+ * negocio, nunca del navegador.
+ */
+
+export type RespuestaCuposPanel = { ok: true; cupos: CupoSugerido[] } | { ok: false; error: string };
+
+export async function cuposParaNuevaCita(peticion: PeticionDeCuposPanel): Promise<RespuestaCuposPanel> {
+  const datos = esquemaCuposPanel.safeParse(peticion);
+  if (!datos.success) return { ok: false, error: 'No pudimos entender la búsqueda' };
+
+  const contexto = await requireNegocio();
+  const { serviceId, staffId, fecha } = datos.data;
+
+  try {
+    const servicio = (await catalogoParaAgendar(contexto)).find((s) => s.id === serviceId);
+    if (!servicio) return { ok: false, error: 'Ese servicio ya no está disponible' };
+
+    const cupos = await cuposSugeridos({ contexto, servicio, staffId, fecha, ahora: new Date() });
+    return { ok: true, cupos };
+  } catch (error) {
+    console.error('[nueva cita] no se pudieron calcular los cupos:', {
+      businessId: contexto.negocio.id,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return { ok: false, error: 'No pudimos cargar las horas libres' };
+  }
+}
+
+export type RespuestaCliente =
+  | { ok: true; cliente: ClienteConocido | null; telefono: string }
+  | { ok: false; error: string };
+
+/** Si el celular ya es cliente de este negocio, se muestra quién es antes de agendar. */
+export async function buscarClienteParaCita(peticion: { telefono: string }): Promise<RespuestaCliente> {
+  const datos = esquemaBuscarCliente.safeParse(peticion);
+  if (!datos.success) return { ok: false, error: 'Escribe un celular' };
+
+  const telefono = normalizarCelular(datos.data.telefono);
+  if (!telefono) return { ok: false, error: 'Ese celular no parece válido. Revisa los números.' };
+
+  const contexto = await requireNegocio();
+
+  try {
+    return { ok: true, cliente: await buscarClientePorTelefono(contexto, telefono), telefono };
+  } catch {
+    return { ok: false, error: 'No pudimos buscar ese cliente. Intenta de nuevo.' };
+  }
+}
+
+export type RespuestaNuevaCita =
+  | { ok: true }
+  | { ok: false; error: string; campos: Record<string, string>; cupoOcupado?: true };
+
+export async function crearCitaDesdePanel(peticion: PeticionDeNuevaCita): Promise<RespuestaNuevaCita> {
+  const datos = esquemaNuevaCita.safeParse(peticion);
+  if (!datos.success) return { ok: false, error: 'Revisa los datos de la cita', campos: erroresPorCampo(datos.error) };
+
+  const telefono = normalizarCelular(datos.data.telefono);
+  if (!telefono) {
+    return { ok: false, error: 'Revisa los datos de la cita', campos: { telefono: 'Ese celular no parece válido' } };
+  }
+
+  const contexto = await requireNegocio();
+  const { serviceId, staffId, fecha, hora, nombre, nota, origen } = datos.data;
+
+  const servicio = (await catalogoParaAgendar(contexto)).find((s) => s.id === serviceId);
+  if (!servicio) return { ok: false, error: 'Ese servicio ya no está disponible', campos: {} };
+
+  const r = await crearCitaManual({
+    contexto,
+    servicio,
+    staffId,
+    inicio: instanteLocal(contexto.negocio.timezone, fecha, hora),
+    cliente: { telefono, nombre },
+    notaInterna: nota,
+    origen,
+    ahora: new Date(),
+  });
+
+  if (!r.ok) {
+    return { ok: false, error: r.error, campos: {}, ...(r.cupoOcupado ? { cupoOcupado: true as const } : {}) };
+  }
+
+  revalidatePath('/panel/agenda');
   return { ok: true };
 }
