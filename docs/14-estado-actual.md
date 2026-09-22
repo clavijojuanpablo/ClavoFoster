@@ -38,7 +38,7 @@ npm run typecheck
 
 ## Avance
 
-**30 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
+**30 de 57 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
 
 | Épica | Estado |
 |---|---|

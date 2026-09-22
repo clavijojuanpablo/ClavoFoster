@@ -33,9 +33,9 @@ quien la hizo.
 | G. Panel y calendario | 6 | 3 | En curso |
 | H. Contabilidad | 5 | 0 | Pendiente |
 | I. Notificaciones | 5 | 0 | Pendiente |
-| J. Suscripciones | 6 | 0 | Pendiente |
+| J. Suscripciones | 8 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **55** | **30** | |
+| **Total MVP** | **57** | **30** | |
 
 ## Orden de ejecución
 
@@ -513,6 +513,8 @@ supuesto y no un hecho.
 | J4 | Webhooks de pago, con verificación de firma e idempotencia | M | Pendiente |
 | J5 | Cobro manual (transferencia/Nequi) activado por super-admin | M | Pendiente |
 | J6 | Mora, avisos, período de gracia y suspensión | M | Pendiente |
+| J7 | Conciliación diaria del estado de suscripciones contra la pasarela | M | Pendiente |
+| J8 | Alertas de fallas operativas: webhooks, trabajos programados y envíos | M | Pendiente |
 
 **J3 — Estados y página pública.** Ya resuelto en la base (2026-09-12): la
 página pública está visible en `trialing`, `active` y `past_due`, y se apaga al
@@ -533,6 +535,27 @@ escribir un adaptador, no reescribir la facturación. Ver
 **J5 — Cobro manual.** No es opcional. Una parte del mercado objetivo no tiene
 tarjeta y paga por transferencia o Nequi. Sin este camino se pierden ventas ya
 cerradas.
+
+**J7 — Conciliación.** Los webhooks se pierden: la pasarela reintenta un número
+limitado de veces y un despliegue o una caída puede tragarse el último intento.
+Un trabajo diario le pregunta a la pasarela el estado de cada suscripción con
+cobro automático y lo compara con `subscriptions`. Criterios:
+- Si difieren, gana la pasarela: se corrige el estado y la corrección queda en
+  `subscription_events`, igual que un webhook.
+- Un negocio que pagó nunca amanece suspendido por un evento perdido.
+- Pasa por la interfaz de J1, no llama a Mercado Pago directamente.
+- Es idempotente: correrlo dos veces el mismo día no cambia nada la segunda vez.
+
+**J8 — Alertas.** Que el alta, el cobro y la suspensión funcionen solos no sirve
+si las fallas son silenciosas: uno se entera cuando un negocio se queja.
+Criterios:
+- Aviso al super-admin cuando falla el procesamiento de un webhook, cuando un
+  trabajo programado (vencimiento de prueba, mora, recordatorios, J7) no corre o
+  termina con error, y cuando sube la tasa de envíos fallidos de WhatsApp o email.
+- J7 reporta cuántas diferencias corrigió; varias seguidas indican que los
+  webhooks están fallando.
+- Sin datos de clientes finales en el aviso: IDs y conteos, no nombres ni
+  celulares.
 
 ---
 
