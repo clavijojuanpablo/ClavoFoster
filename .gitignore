@@ -57,3 +57,7 @@ next-env.d.ts
 !.yarn/patches
 !.yarn/releases
 !.yarn/versions
+
+# Claude Code: lo personal y la caché de los hooks
+.claude/settings.local.json
+.claude/.cache/

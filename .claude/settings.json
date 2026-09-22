@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(npm run test:*)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run build)",
+      "Bash(npm run db:types)",
+      "Bash(npm run db:diff:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx next typegen:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git rev-parse:*)",
+      "Read(./docs/**)",
+      "Read(./node_modules/next/dist/docs/**)"
+    ],
+    "ask": [
+      "Bash(npm run db:push:*)",
+      "Bash(npx supabase db push:*)",
+      "Bash(supabase db push:*)",
+      "Bash(npm run db:seed:*)",
+      "Bash(git push:*)"
+    ],
+    "deny": [
+      "Read(./.env.local)",
+      "Read(./.env)",
+      "Edit(./.env.local)",
+      "Write(./.env.local)",
+      "Bash(npx supabase db reset --linked:*)",
+      "Bash(supabase db reset --linked:*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/inicio-de-sesion.mjs\"", "timeout": 15 }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guardia-previa.mjs\"", "timeout": 15 }
+        ]
+      },
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guardia-bash.mjs\"", "timeout": 15 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/revisar-archivo.mjs\"", "timeout": 15 }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/verificar-al-terminar.mjs\"", "timeout": 300 }
+        ]
+      }
+    ]
+  }
+}

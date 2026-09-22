@@ -132,6 +132,7 @@ Detalle completo, incluida la definición de terminado:
 | `docs/14-estado-actual.md` | **Dónde vamos y cómo retomar. Empieza acá.** |
 | `docs/15-sistema-de-diseno.md` | Colores, tipografía, componentes y menú |
 | `docs/adr/` | Decisiones de arquitectura y por qué se tomaron |
+| `.claude/README.md` | Comandos, agentes y hooks de Claude Code para este repo |
 
 ## Advertencias para quien escriba código aquí
 
