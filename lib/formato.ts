@@ -29,36 +29,58 @@ export function iniciales(nombre: string): string {
   return primeras.join('').toUpperCase();
 }
 
+/**
+ * Node y el navegador no escriben el mismo espacio.
+ *
+ * Según la versión de ICU, `Intl` mete un espacio fino no separable (U+202F) o
+ * uno normal no separable (U+00A0) antes de "a. m.". Se ven idénticos, pero
+ * para React son textos distintos: un componente de cliente que muestre una
+ * hora revienta la hidratación y **se le caen los manejadores de eventos a todo
+ * el árbol**. Pasó con el calendario (G1) y costó encontrarlo, porque en
+ * pantalla no se nota nada.
+ *
+ * Toda función de este archivo que formatee con `Intl` pasa por acá.
+ */
+function conEspaciosNormales(texto: string): string {
+  return texto.replace(/[  ]/g, ' ');
+}
+
 /** Hora local del negocio: "9:30 a. m." */
 export function hora(timezone: string, instante: Date | string): string {
-  return new Intl.DateTimeFormat('es-CO', {
-    timeZone: timezone,
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(instante));
+  return conEspaciosNormales(
+    new Intl.DateTimeFormat('es-CO', {
+      timeZone: timezone,
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(instante)),
+  );
 }
 
 /** "viernes 12 de septiembre" */
 export function fechaLarga(timezone: string, instante: Date): string {
-  return new Intl.DateTimeFormat('es-CO', {
-    timeZone: timezone,
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  }).format(instante);
+  return conEspaciosNormales(
+    new Intl.DateTimeFormat('es-CO', {
+      timeZone: timezone,
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    }).format(instante),
+  );
 }
 
 /** "lun 21 sep", corto para listas. */
 export function fechaCorta(timezone: string, instante: Date): string {
-  return new Intl.DateTimeFormat('es-CO', {
-    timeZone: timezone,
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  })
-    .format(instante)
-    .replace(/\./g, '')
-    .replace(',', '');
+  return conEspaciosNormales(
+    new Intl.DateTimeFormat('es-CO', {
+      timeZone: timezone,
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    })
+      .format(instante)
+      .replace(/\./g, '')
+      .replace(',', ''),
+  );
 }
 
 /**

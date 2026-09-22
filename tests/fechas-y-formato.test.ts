@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { colorDeServicio } from '@/lib/colores';
-import { fechaLocal, rangoDelDia, saludo } from '@/lib/fechas';
-import { duracion, iniciales, pesos } from '@/lib/formato';
+import { fechaLocal, fechasEntre, rangoDelDia, saludo, sumarDias } from '@/lib/fechas';
+import { cuandoEsElBloqueo, duracion, fechaCorta, fechaLarga, hora, iniciales, pesos } from '@/lib/formato';
 
 describe('fechaLocal', () => {
   // 2026-09-13 01:30 UTC = 12 de septiembre, 8:30 p. m. en Bogotá.
@@ -69,5 +69,53 @@ describe('formato', () => {
     expect(colorDeServicio(null, 7)).toBe(colorDeServicio(null, 1));
     expect(colorDeServicio('#ABCDEF', 3)).toBe('#abcdef');
     expect(colorDeServicio('rojo', 2)).toBe('#1e9e8c');
+  });
+});
+
+describe('sumarDias y fechasEntre', () => {
+  it('cruza el fin de mes, el año y el 29 de febrero', () => {
+    expect(sumarDias('2026-09-12', 3)).toBe('2026-09-15');
+    expect(sumarDias('2026-01-31', 1)).toBe('2026-02-01');
+    expect(sumarDias('2026-12-31', 1)).toBe('2027-01-01');
+    expect(sumarDias('2028-02-28', 1)).toBe('2028-02-29');
+    expect(sumarDias('2026-01-01', -1)).toBe('2025-12-31');
+  });
+
+  // Son etiquetas de calendario, no instantes: un día con cambio de horario
+  // sigue siendo un día.
+  it('un día es un día aunque la zona cambie de horario', () => {
+    expect(sumarDias('2026-03-08', 1)).toBe('2026-03-09');
+  });
+
+  it('incluye los dos extremos', () => {
+    expect(fechasEntre('2026-09-12', '2026-09-14')).toEqual(['2026-09-12', '2026-09-13', '2026-09-14']);
+    expect(fechasEntre('2026-09-12', '2026-09-12')).toEqual(['2026-09-12']);
+  });
+
+  it('un rango al revés no devuelve nada', () => {
+    expect(fechasEntre('2026-09-14', '2026-09-12')).toEqual([]);
+  });
+});
+
+describe('espacios de Intl', () => {
+  // Node y el navegador meten espacios distintos (U+202F contra U+00A0) antes
+  // de "a. m." según su versión de ICU. Se ven iguales, pero para React son
+  // textos distintos: rompen la hidratación y le tumban los eventos al árbol
+  // entero. Le pasó al calendario (G1).
+  const RAROS = /[  ]/;
+
+  it('ninguna función de formato deja espacios no separables', () => {
+    const tz = 'America/Bogota';
+    const instante = new Date('2026-09-16T15:30:00Z');
+
+    expect(hora(tz, instante)).not.toMatch(RAROS);
+    expect(fechaLarga(tz, instante)).not.toMatch(RAROS);
+    expect(fechaCorta(tz, instante)).not.toMatch(RAROS);
+    expect(cuandoEsElBloqueo(tz, instante, new Date('2026-09-16T18:00:00Z'))).not.toMatch(RAROS);
+    expect(pesos(30_000)).not.toMatch(RAROS);
+  });
+
+  it('la hora se sigue leyendo como debe', () => {
+    expect(hora('America/Bogota', new Date('2026-09-16T15:30:00Z'))).toBe('10:30 a. m.');
   });
 });

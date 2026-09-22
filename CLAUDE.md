@@ -85,6 +85,7 @@ práctica. Una columna se llama `*_cop` para que sea evidente.
 /lib
   /supabase          Clientes de Supabase (servidor, navegador, admin)
   /scheduling        Motor de cupos — lógica pura, sin dependencias de IO
+  /booking           La reserva pública sobre el motor: cupos, OTP y citas
   /billing           Interfaz de pagos y adaptadores por pasarela
   /notifications     WhatsApp y email
 /supabase
@@ -131,6 +132,7 @@ Detalle completo, incluida la definición de terminado:
 | `docs/14-estado-actual.md` | **Dónde vamos y cómo retomar. Empieza acá.** |
 | `docs/15-sistema-de-diseno.md` | Colores, tipografía, componentes y menú |
 | `docs/adr/` | Decisiones de arquitectura y por qué se tomaron |
+| `.claude/README.md` | Comandos, agentes y hooks de Claude Code para este repo |
 
 ## Advertencias para quien escriba código aquí
 

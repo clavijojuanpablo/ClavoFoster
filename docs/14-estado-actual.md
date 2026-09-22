@@ -3,7 +3,7 @@
 > **Empieza por acá si vuelves al proyecto después de un tiempo, o si eres
 > alguien nuevo.** Este documento se actualiza al terminar cada tarea.
 >
-> Última actualización: 2026-09-14
+> Última actualización: 2026-09-16
 
 ## Retomar en cinco minutos
 
@@ -38,7 +38,7 @@ npm run typecheck
 
 ## Avance
 
-**21 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
+**30 de 55 tareas del MVP.** El detalle vive en `03-backlog.md`; acá va el resumen.
 
 | Épica | Estado |
 |---|---|
@@ -47,18 +47,26 @@ npm run typecheck
 | B — Negocio y onboarding | B1, B3, B4 y B5 hechas. B2 pendiente |
 | C — Servicios | C1 hecha. C3 (categorías y orden) pendiente. C2 (buffers) salió del MVP |
 | D — Trabajadores y horarios | D1 a D4 hechas. D5 (invitación del trabajador) pendiente |
-| F, G, H, I, J, K | Sin empezar |
+| **F — Reserva pública** | **Completa** |
+| G — Panel y calendario | G1, G2 y G5 hechas. Faltan G3, G4 y G6 |
+| H, I, J, K | Sin empezar |
 
 ### Lo que ya funciona
 
 Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 
 - `/[slug]` — página pública del negocio, sin sesión. Ej. `/barberia-demo`
+- `/[slug]/reservar` — **la reserva completa**: servicio, persona, día y hora con
+  cupos reales, código por WhatsApp y la cita guardada
+- `/cita/[token]` — la cita del cliente: ver, mover la hora y cancelar
 - `/login`, `/registro`, `/bienvenida` — entrar, crear cuenta y crear el negocio
 - `/panel` — Inicio: citas de hoy, siguiente cita, caja del día y "Completa tu negocio"
 - `/panel/negocio` — perfil: página visible u oculta, datos, mapa, fotos, zona horaria
 - `/panel/servicios` — crear, editar, desactivar y reactivar servicios
 - `/panel/equipo` — el equipo, los servicios que presta y el horario semanal de cada persona
+- `/panel/agenda` — **el calendario**: día y semana, una columna por persona,
+  detalle de la cita y marcarla cumplida o no llegó. Se actualiza sola cuando
+  alguien reserva
 - `/panel/equipo/ausencias` — bloqueos y cierres del local, con aviso de citas afectadas
 - `/api/cron/cleanup-holds` — libera retenciones vencidas (nadie lo llama aún)
 - `lib/scheduling/` — el motor de cupos, con 28 pruebas
@@ -66,18 +74,38 @@ Desplegado en **https://clavo-foster-5lt7.vercel.app** (rama `main`):
 Todo con el sistema de diseño de `15-sistema-de-diseno.md`: menú lateral en
 escritorio y barra inferior con hoja "Más" en celular.
 
-Comprobación: 256 pruebas en verde, `typecheck`, `lint` y `build` limpios.
+Comprobación: 312 pruebas en verde, `typecheck`, `lint` y `build` limpios.
 
 ### Qué sigue
 
-**La épica D quedó lista para el motor** (D5, la invitación del trabajador, es
-S y puede esperar). Lo siguiente es **F (reserva pública)**: donde el motor de
-cupos se conecta por fin con servicios, equipo, horarios y bloqueos, y `/[slug]`
-deja de ser una vitrina. B2 (el asistente por pasos) se cierra al final. No hay
-horario del local (decidido el 2026-09-14).
+**El producto ya hace lo que promete de lado del cliente final.** Un
+desconocido entra a `/barberia-demo`, escoge corte, persona y hora, recibe un
+código, y la cita queda guardada con su link para moverla o cancelarla. La
+épica F está completa.
 
-Después: F (reserva pública), que es donde el motor de cupos por fin se conecta
-con la base y `/[slug]` deja de ser una vitrina.
+**⚠️ Antes de un cliente real: las credenciales de WhatsApp.** Sin
+`WHATSAPP_TOKEN` y `WHATSAPP_PHONE_ID`, el canal está en *modo consola*: no
+manda nada y escribe el código de verificación en el registro del servidor.
+Sirve para desarrollar y no bloquea nada, pero **con clientes de verdad es un
+agujero**: cualquiera con acceso a los registros vería los códigos. La pantalla
+del código lo avisa mientras esté así. Hay que sacar el número y las plantillas
+(`auth_otp`, `booking_confirmed`, `booking_cancelled`, `booking_rescheduled`)
+con Meta; es trámite, no programación, y conviene empezarlo ya porque la
+aprobación tarda. Ver `09-notificaciones.md`.
+
+**El dueño ya tiene dónde ver lo que le reservaron** (G1, G2 y G5). El
+calendario está en `/panel/agenda`, con vista de día y de semana, y se
+actualiza solo si alguien reserva mientras lo tiene abierto.
+
+De la épica G faltan tres:
+
+- **G3 — crear cita manual.** Es la que más falta hace: el cliente que llega sin
+  reservar o el que llama por teléfono no tiene cómo entrar a la agenda.
+- **G4 — reprogramar arrastrando.** Cancelar ya está; falta el arrastre.
+- **G6 — PWA instalable.**
+
+Después H (contabilidad), que se engancha con "marcar cumplida". B2, C3 y D5 se
+cierran al final. No hay horario del local (decidido el 2026-09-14).
 
 **Pendiente antes de tener dueños reales: la confirmación de correo.** El
 proyecto parece exigir que el dueño confirme su correo, y el servicio de correo
@@ -124,6 +152,7 @@ Settings → Environment Variables:
 | `SUPABASE_SECRET_KEY` | Ídem, la llave *secret*. **Nunca con prefijo público** |
 | `NEXT_PUBLIC_APP_URL` | La URL que asigne Vercel, no `localhost` |
 | `CRON_SECRET` | `openssl rand -hex 32`, o el mismo de `.env.local` |
+| `WHATSAPP_TOKEN` y `WHATSAPP_PHONE_ID` | Meta → WhatsApp Cloud API. **Opcionales en desarrollo**: sin ellas el canal escribe en el log en vez de enviar. Obligatorias antes de un cliente real |
 
 > **Márcalas en los tres entornos (Production, Preview y Development), no solo
 > en Production.** Si solo están en Production, cualquier rama que no sea `main`
@@ -142,8 +171,13 @@ que `CRON_SECRET` sí quedó puesto— pero nadie lo llama solo. Ojo con esto al
 configurarlo: el plan gratuito de Vercel solo permite tareas programadas **una
 vez al día**, y una limpieza diaria de retenciones de 10 minutos no sirve de
 nada. Lo correcto es `pg_cron` dentro de Supabase, como dice
-`04-stack-tecnologico.md`. No es urgente: las retenciones todavía no se crean,
-eso llega con la épica F.
+`04-stack-tecnologico.md`.
+
+Lo que sí hay pendiente de programar es **`limpiar_otp_vencidos()`**, que borra
+los códigos de más de un día. Nadie la llama todavía. No es urgente —son unas
+pocas filas— pero son datos de desconocidos y no tienen por qué quedarse.
+`cleanup-holds` sigue sin tener nada que limpiar: la reserva no crea
+retenciones (ver `13-contratos-de-api.md`, `holdSlot`).
 
 ## Decisiones que se tomaron sobre la marcha
 
@@ -191,6 +225,38 @@ nueva no necesita el suyo; si quiere uno propio, va en su carpeta. Ojo: lo que
 el layout del panel carga con cookies no lo cubre, así que el layout no debe
 sumar consultas lentas.
 
+**La disponibilidad pública se calcula con el cliente privilegiado.** Es el
+cuarto caso de uso de `lib/supabase/admin.ts`, además de los tres que lista su
+comentario: horarios, bloqueos y citas no son legibles para el anónimo —y así
+debe ser—, y el cliente final no tiene sesión que RLS pueda evaluar. Lo que
+queda en pie: el `business_id` sale del slug verificado, no del navegador, y de
+`lib/booking/disponibilidad.ts` solo salen horas libres.
+
+**El OTP no se guarda: se guarda su HMAC, con la llave secreta de Supabase.** Se
+reutiliza esa llave en vez de pedir otra variable de entorno: ya es secreta, ya
+vive solo en el servidor y ya es obligatoria para arrancar. El permiso que sale
+de verificar es un token firmado con la misma llave, sin tabla que limpiar.
+
+**La cita se crea de una vez, sin apartar el cupo antes.** `holdSlot` no existe:
+`appointments.customer_id` no admite nulos y al cliente solo se le conoce
+después del código. Lo que impide la doble reserva es la restricción de Postgres,
+no una consulta previa. El razonamiento completo, y cómo se arreglaría si hace
+falta, en `13-contratos-de-api.md`.
+
+**`Intl` no pone el mismo espacio en Node y en el navegador, y eso rompe la
+hidratación.** Según la versión de ICU, el espacio antes de "a. m." es U+202F o
+U+00A0. Se ven idénticos, pero para React son textos distintos: un componente de
+cliente que muestre una hora revienta la hidratación y **se le caen los
+manejadores de eventos a todo el árbol** — en el calendario, los bloques dejaban
+de abrirse. Todas las funciones de `lib/formato.ts` normalizan esos espacios, y
+hay una prueba que lo vigila. Si una pantalla deja de responder a los clics sin
+error visible, mirar acá primero.
+
+**En las pruebas, `server-only` es un módulo vacío.** Ese paquete existe para
+que el empaquetador reviente si un módulo de servidor se cuela en el navegador,
+y revienta también dentro de vitest, donde todo corre en Node. El alias está en
+`vitest.config.mts` y apunta a `tests/server-only.ts`.
+
 **`lib/scheduling` no tiene dependencias, ni siquiera de fechas.** La
 conversión de zona horaria son ~35 líneas con `Intl`. Se necesitaba una sola
 operación y no valía la pena arrastrar una librería.
@@ -211,6 +277,10 @@ operación y no valía la pena arrastrar una librería.
 | Una pantalla del panel dice "No pudimos cargar esta pantalla" y el registro muestra `PGRST201` | Hay dos llaves foráneas entre las mismas dos tablas y la consulta con datos relacionados (`staff_services(...)`) no sabe cuál usar. Dejar una sola llave; si hacen falta las dos, nombrar la relación: `staff_services!nombre_de_la_llave(...)` |
 | Una sección del menú dice "Pronto" y no abre | Es a propósito: todavía no existe. Se activa en `components/admin/navegacion.ts` al terminar su tarea |
 | Un negocio con slug `registro`, `bienvenida`, etc. no se puede crear | Slugs reservados por rutas de la aplicación. Una ruta nueva de primer nivel va en `slug_es_reservado()` |
+| El código de WhatsApp nunca llega | Falta `WHATSAPP_TOKEN` o `WHATSAPP_PHONE_ID`: el canal está en modo consola y el código sale en el registro del servidor (`[whatsapp] SIN CREDENCIALES`). La pantalla del código lo avisa |
+| Reservar falla con "Alguien acaba de tomar esa hora" | Es la restricción `appointments_sin_solapamiento` haciendo su trabajo. No es un error: la interfaz recarga cupos sola |
+| Una pantalla se ve bien pero no responde a los clics | Casi siempre es un error de hidratación, y casi siempre son los espacios de `Intl`. Ver la decisión sobre `lib/formato.ts` arriba. La consola del navegador lo dice, la terminal no |
+| La agenda no se actualiza sola | La tabla tiene que estar en la publicación `supabase_realtime` (migración `20260916120001`). Realtime respeta RLS, así que si la sesión no puede leer la fila, tampoco le llega el evento |
 
 ## Cómo mantener esto vivo
 

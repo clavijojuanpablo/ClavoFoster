@@ -29,13 +29,13 @@ quien la hizo.
 | C. Servicios | 2 | 1 | En curso |
 | D. Trabajadores y horarios | 5 | 4 | En curso |
 | E. Motor de agendamiento | 5 | 5 | **Hecho** |
-| F. Reserva pública | 6 | 0 | Pendiente |
-| G. Panel y calendario | 6 | 0 | Pendiente |
+| F. Reserva pública | 6 | 6 | **Hecho** |
+| G. Panel y calendario | 6 | 3 | En curso |
 | H. Contabilidad | 5 | 0 | Pendiente |
 | I. Notificaciones | 5 | 0 | Pendiente |
 | J. Suscripciones | 6 | 0 | Pendiente |
 | K. Reportes | 3 | 0 | Pendiente |
-| **Total MVP** | **55** | **21** | |
+| **Total MVP** | **55** | **30** | |
 
 ## Orden de ejecución
 
@@ -341,24 +341,62 @@ lógica en la aplicación.
 
 | ID | Tarea | Pri | Estado |
 |---|---|---|---|
-| F1 | Página pública del negocio en `/[slug]` | M | Pendiente |
-| F2 | Selección de servicio y de trabajador (con "el primero disponible") | M | Pendiente |
-| F3 | Calendario de cupos disponibles | M | Pendiente |
-| F4 | Identificación por celular con OTP de WhatsApp | M | Pendiente |
-| F5 | Alta de cliente nuevo (solo nombre) y reconocimiento del que vuelve | M | Pendiente |
-| F6 | Página de gestión de la cita: cancelar y reprogramar por link | M | Pendiente |
+| F1 | Página pública del negocio en `/[slug]` | M | **Hecho** |
+| F2 | Selección de servicio y de trabajador (con "el primero disponible") | M | **Hecho** |
+| F3 | Calendario de cupos disponibles | M | **Hecho** |
+| F4 | Identificación por celular con OTP de WhatsApp | M | **Hecho** |
+| F5 | Alta de cliente nuevo (solo nombre) y reconocimiento del que vuelve | M | **Hecho** |
+| F6 | Página de gestión de la cita: cancelar y reprogramar por link | M | **Hecho** |
 
-**F4 — OTP por WhatsApp.** Ver `09-notificaciones.md`. Criterios:
+**F2 y F3 — Cómo quedaron.** Todo en una sola pantalla que va creciendo
+(`/[slug]/reservar`), no en un asistente con "siguiente": en un celular, cambiar
+el servicio tiene que ser tocar el servicio. El catálogo entero viaja en el
+primer render y lo único que se pide sobre la marcha son los cupos, en tandas de
+catorce días. El cálculo vive en `lib/booking/disponibilidad.ts`, que es lo único
+del flujo público que usa el cliente privilegiado: hacia afuera solo salen horas
+libres.
+
+**F4 — OTP por WhatsApp.** Ver `09-notificaciones.md`. Criterios, todos cumplidos:
 - Código de 6 dígitos, válido 10 minutos, máximo 5 intentos.
 - Límite de envíos por número y por IP, para que nadie nos queme el saldo.
 - Reenvío disponible a los 60 segundos.
 - El número se normaliza a formato internacional (`+57...`) antes de guardarlo.
 
-**F6 — Gestión por link.** Criterios:
+**Funciona sin credenciales de Meta, a propósito** (decidido el 2026-09-15). El
+canal de `lib/notifications/whatsapp.ts` entra en *modo consola* mientras no
+existan `WHATSAPP_TOKEN` y `WHATSAPP_PHONE_ID`: no envía nada y escribe el
+mensaje en el registro del servidor, y la pantalla del código lo avisa. Así el
+flujo se construyó y se probó entero sin esperar a que Meta apruebe el número y
+las plantillas, que es un trámite y no una tarea de programación. **Ese modo no
+puede quedar encendido con clientes reales**: los códigos quedarían en los
+registros. Ver `14-estado-actual.md`.
+
+El código en claro no se guarda en ninguna parte: en `otp_codes` va su HMAC. El
+permiso para terminar de reservar es un token firmado, sin tabla, que vale para
+un negocio, un número y veinte minutos.
+
+**F5 — Cómo quedó.** No hay retención de cupo previa: la cita se crea de una vez
+al confirmar, porque `appointments.customer_id` no admite nulos y el cliente solo
+se conoce después del código. Lo que impide la doble reserva no es una consulta
+previa sino la restricción `appointments_sin_solapamiento`, y hay una prueba con
+dos peticiones simultáneas por el mismo cupo donde exactamente una gana. La
+ventana de exposición es lo que el cliente tarda escribiendo el código; si eso
+llega a costar cupos, el arreglo es volver `customer_id` nulable y apartar antes.
+
+**F6 — Gestión por link.** Criterios, todos cumplidos:
 - El link lleva un token aleatorio largo, no el ID de la cita.
 - Muestra únicamente esa cita.
 - Respeta las anticipaciones mínimas configuradas por el negocio.
 - Al cancelar, el cupo queda inmediatamente disponible para otros.
+
+Reprogramar reusa la misma pantalla de reserva con `?mover=<token>`: el selector
+de horas es idéntico, así que no hay dos calendarios que mantener. Y no pide
+código otra vez — el token del link ya prueba de quién es la cita.
+
+**Mover no es cancelar y volver a crear.** Es la misma cita, con su mismo token
+y su mismo precio: recrearla le cambiaría al cliente el link que ya tiene en su
+chat y le pondría el precio de hoy, que es justo lo que prohíbe la regla 4 de
+CLAUDE.md.
 
 **Nota de rendimiento:** `/[slug]` es la página que ven los clientes finales y
 es la cara del producto. Tiene que cargar rápido en un celular de gama media con
@@ -370,23 +408,42 @@ red móvil. Se mide, no se supone.
 
 | ID | Tarea | Pri | Estado |
 |---|---|---|---|
-| G1 | Calendario día y semana, por trabajador y en columnas | M | Pendiente |
-| G2 | Detalle de la cita y datos del cliente | M | Pendiente |
+| G1 | Calendario día y semana, por trabajador y en columnas | M | **Hecho** |
+| G2 | Detalle de la cita y datos del cliente | M | **Hecho** |
 | G3 | Crear cita manual desde el panel | M | Pendiente |
 | G4 | Reprogramar arrastrando, y cancelar | M | Pendiente |
-| G5 | Cambios de estado: cumplida, no asistió, cancelada | M | Pendiente |
+| G5 | Cambios de estado: cumplida, no asistió, cancelada | M | **Hecho** |
 | G6 | PWA instalable (manifest, íconos, pantalla de carga) | M | Pendiente |
 
 **G1 — Calendario.** Es la pantalla más usada del producto y la más difícil de
-construir. Criterios:
+construir. Criterios, todos cumplidos:
 - Vista de día con una columna por trabajador, y vista de semana.
-- Se ve bien en celular: en pantalla angosta cae a un trabajador a la vez.
+- Se ve bien en celular: en pantalla angosta las columnas se deslizan de lado
+  con la regla de horas fija. **No** se apilan: perder la referencia de la hora
+  es perder el calendario.
 - Las citas se distinguen por color de servicio y muestran estado.
 - Actualización en vivo: si un cliente reserva mientras el dueño mira la
   pantalla, la cita aparece sin recargar (Supabase Realtime).
 
-**G5 — Estados.** Marcar **cumplida** dispara el asiento de ingreso de la épica
-H. Debe ser idempotente: marcar dos veces no puede generar dos ingresos.
+Qué se está mirando —día, vista y persona— vive en la URL, no en React: el
+botón de atrás funciona y un día concreto se puede compartir por link. El fondo
+apagado dice cuándo esa persona no trabaja, así que el almuerzo y el sábado
+corto se ven sin abrir el horario.
+
+**El reparto en carriles está aparte, en `lib/agenda/disposicion.ts`, y es
+lógica pura** con sus pruebas. La restricción de la base impide que dos citas
+*activas* se crucen, pero una cumplida y una nueva confirmada sí pueden convivir
+a la misma hora, y una pantalla que dibuje una encima de otra estaría mintiendo.
+
+**G5 — Estados.** Hecho en el detalle de la cita. Marcar **cumplida** dispara el
+asiento de ingreso de la épica H, y por eso el `update` exige que la cita no esté
+ya en ese estado: marcar dos veces no puede terminar en dos ingresos.
+
+**G4 — Lo que falta.** Cancelar ya está (en el detalle de la cita, con
+confirmación). Falta reprogramar **arrastrando** el bloque en el calendario. La
+lógica de mover ya existe y está probada —es `reprogramarPorToken` de F6—; lo
+que falta es el arrastre y una versión que use el id de la cita en vez del token
+del cliente.
 
 **G6 — PWA.** Criterios:
 - Se puede instalar desde Chrome en Android y desde Safari en iOS.

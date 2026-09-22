@@ -59,9 +59,9 @@ reaccionar con cupos frescos, no con una pantalla de error.
 
 ## Reserva pública
 
-Sin sesión. En `app/(public)/[slug]/actions.ts`.
+Sin sesión. En `app/(public)/[slug]/reservar/actions.ts` y `app/(public)/cita/[token]/actions.ts`; la lógica, en `lib/booking/`.
 
-### `getBusinessBySlug`
+### `getBusinessBySlug` — **hecho**, como `getNegocioPublico` en `lib/tenant.ts`
 
 ```ts
 function getBusinessBySlug(slug: string): Promise<Result<PublicBusiness>>;
@@ -81,96 +81,123 @@ Solo devuelve negocios con `is_published = true` y una suscripción en
 negocio suspendido por mora da `NOT_FOUND` — no "suspendido", porque el estado de
 pago del negocio no es asunto del cliente final.
 
-### `getAvailability`
+### `cuposDisponibles` — **hecho** (F2 y F3)
 
-**La operación más usada del producto.**
+**La operación más usada del producto.** En
+`app/(public)/[slug]/reservar/actions.ts`.
 
 ```ts
-function getAvailability(input: {
+function cuposDisponibles(input: {
   slug: string;
   serviceId: string;
-  staffId: string | null;      // null = cualquiera disponible
-  fromDate: string;            // 'YYYY-MM-DD', hora local del negocio
-  toDate: string;              // máximo 31 días de rango
-}): Promise<Result<{ days: AvailableDay[] }>>;
+  staffId: string;             // un uuid, o 'cualquiera' = el primero disponible
+  desde: string;               // 'YYYY-MM-DD', hora local del negocio
+}): Promise<{ ok: true; ventana: VentanaDeCupos } | { ok: false; error: string }>;
 
-type AvailableDay = {
-  date: string;                // 'YYYY-MM-DD'
-  slots: { startAt: string; staffId: string; staffName: string }[];
+type VentanaDeCupos = {
+  dias: { fecha: string; cupos: Cupo[] }[];
+  siguienteDesde: string | null;   // null: se llegó al tope de max_advance_days
 };
+
+type Cupo = { inicio: string; staffId: string; staffNombre: string };
 ```
 
-`startAt` es ISO 8601 en UTC. La conversión a hora local se hace al mostrar,
+`inicio` es ISO 8601 en UTC. La conversión a hora local se hace al mostrar,
 usando `timezone` del negocio.
 
-Con `staffId: null` se combinan los cupos de todos los trabajadores habilitados
-para ese servicio y, si dos coinciden en la misma hora, se devuelve uno solo —
-el de menor carga ese día, para repartir el trabajo.
+**Solo entra el primer día, no el rango.** Cuántos días trae cada tanda lo decide
+el servidor (`DIAS_POR_VENTANA`, catorce), así que nadie puede pedir un año de
+una. El tope duro de la consulta son 31 días; pedir un año entero es lo que
+convierte esta operación en el cuello de botella.
 
-Rango máximo de 31 días por llamada: pedir un año entero es lo que convierte
-esta operación en el cuello de botella.
+Con `staffId: 'cualquiera'` se combinan los cupos de todos los trabajadores
+habilitados para ese servicio y, si dos coinciden en la misma hora, se devuelve
+uno solo — el de menor carga ese día, para repartir el trabajo.
 
-### `requestOtp` y `verifyOtp`
+El cálculo está en `lib/booking/disponibilidad.ts`. Es el único punto del flujo
+público que usa el cliente privilegiado de Supabase, porque horarios, bloqueos y
+citas no son legibles para el anónimo y el cliente final no tiene sesión que RLS
+pueda evaluar. Las dos barreras que quedan en su lugar: el `business_id` sale
+del slug verificado, y hacia afuera solo salen horas libres.
+
+### `pedirCodigo` y `confirmarCodigo` — **hechos** (F4)
 
 ```ts
-function requestOtp(input: { slug: string; phone: string }):
-  Promise<Result<{ sentTo: string; expiresInSeconds: number; canResendInSeconds: number }>>;
+function pedirCodigo(input: { slug: string; telefono: string }):
+  Promise<{ ok: true; enmascarado: string; puedeReenviarEnSegundos: number } | { ok: false; error: string }>;
 
-function verifyOtp(input: { slug: string; phone: string; code: string }):
-  Promise<Result<{ token: string; isNewCustomer: boolean; customerName: string | null }>>;
+function confirmarCodigo(input: { slug: string; telefono: string; codigo: string }):
+  Promise<{ ok: true; token: string; esClienteNuevo: boolean; nombre: string | null } | { ok: false; error: string }>;
 ```
 
-`phone` se normaliza a E.164 antes de cualquier cosa. `sentTo` viene enmascarado
-(`+57 300 *** 4567`).
+`telefono` se normaliza a E.164 antes de cualquier cosa. `enmascarado` sale como
+`+57 300 *** 4567`, lo justo para que el cliente reconozca su número.
 
-`token` es de corta vida y sirve solo para completar esta reserva.
-`isNewCustomer` le dice a la interfaz si pedir el nombre — es el interruptor del
-flujo "solo el celular" de `02-usuarios-y-flujos.md`.
+`token` es un **token firmado, sin tabla**: vale para un negocio, un número y
+veinte minutos, y es lo único que autoriza a crear la cita. `esClienteNuevo` le
+dice a la interfaz si pedir el nombre — es el interruptor del flujo "solo el
+celular" de `02-usuarios-y-flujos.md`.
 
-Límite: 3 envíos por número por hora y 10 por IP por hora → `RATE_LIMITED`. Sin
-esto, cualquiera puede quemarnos el saldo de WhatsApp.
+Límites: 3 envíos por número por hora y 10 por conexión por hora, reenvío a los
+60 segundos, código de 6 dígitos válido 10 minutos con 5 intentos. En
+`otp_codes` se guarda el HMAC del código, nunca el código.
 
-### `holdSlot`
+### `holdSlot` — **no existe, y es a propósito**
+
+El diseño original apartaba el cupo con una cita `pending` a 10 minutos mientras
+el cliente se identificaba. No se implementó porque `appointments.customer_id`
+no admite nulos y al cliente solo se le conoce **después** del código: para
+apartar habría que crear primero un cliente a medias.
+
+Lo que protege contra la doble reserva no era la retención de todos modos, sino
+la restricción `appointments_sin_solapamiento`. La cita se crea de una vez al
+confirmar y Postgres deja pasar una sola; hay una prueba con dos peticiones
+simultáneas por el mismo cupo. La ventana de exposición es lo que el cliente
+tarde escribiendo su código, y la interfaz reacciona volviendo a pedir cupos.
+
+Si esa ventana llega a costar cupos de verdad, el arreglo es volver
+`customer_id` nulable y apartar antes. `expires_at` y `/api/cron/cleanup-holds`
+ya están puestos para eso.
+
+### `reservar` — **hecho** (F5)
 
 ```ts
-function holdSlot(input: {
-  slug: string; serviceId: string; staffId: string; startAt: string;
-}): Promise<Result<{ appointmentId: string; expiresAt: string }>>;
+function reservar(input: {
+  slug: string; serviceId: string; staffId: string;
+  inicio: string;                // ISO, UTC
+  token: string;                 // el de confirmarCodigo
+  nombre: string | null;         // obligatorio si es cliente nuevo
+  nota: string | null;
+}): Promise<{ ok: true; linkDeGestion: string } | { ok: false; error: string; cupoOcupado?: true }>;
 ```
 
-Crea la cita en estado `pending` con vencimiento a 10 minutos. La retención del
-cupo **es** la cita pendiente, gracias a la restricción `no_overlap`
-(`06-motor-de-agendamiento.md`).
+Crea la cita en `confirmed`, crea el cliente si es nuevo y manda la confirmación
+por WhatsApp con el link de gestión. **El teléfono sale del token, nunca del
+formulario**: si viniera del navegador, cualquiera podría agendar a nombre de
+otro. Precio y duración se copian de la base, incluido el número propio de esa
+persona si lo tiene.
 
-Devuelve `SLOT_TAKEN` si otro llegó primero.
+`cupoOcupado` es el `SLOT_TAKEN` de la tabla de errores: la interfaz recarga
+cupos en vez de mostrar una pantalla de error.
 
-### `confirmBooking`
-
-```ts
-function confirmBooking(input: {
-  appointmentId: string;
-  token: string;                 // de verifyOtp
-  customerName?: string;         // obligatorio si isNewCustomer
-  customerNote?: string;
-}): Promise<Result<{ appointment: PublicAppointment; manageUrl: string }>>;
-```
-
-Pasa la cita a `confirmed`, crea el cliente si es nuevo y encola la confirmación
-por WhatsApp. Idempotente: llamarla dos veces con el mismo `appointmentId` no
-crea dos citas ni manda dos mensajes.
-
-### `getAppointmentByToken`, `cancelByToken`, `rescheduleByToken`
+### Gestión por token — **hecha** (F6)
 
 ```ts
-function getAppointmentByToken(token: string): Promise<Result<PublicAppointment>>;
-function cancelByToken(token: string): Promise<Result<{ cancelled: true }>>;
-function rescheduleByToken(input: { token: string; newStartAt: string }):
-  Promise<Result<PublicAppointment>>;
+function obtenerCitaPorToken(token: string): Promise<CitaDelCliente | null>;
+function cancelarCita(input: { token: string }): Promise<{ ok: true } | { ok: false; error: string }>;
+function moverCita(input: { token: string; inicio: string; staffId: string }):
+  Promise<{ ok: true } | { ok: false; error: string; cupoOcupado?: true }>;
 ```
 
 `token` es el `manage_token` aleatorio de la cita, nunca su `id`. Devuelve
 **solo esa cita**. Respeta `cancel_notice_minutes` del negocio; fuera de plazo,
-`FORBIDDEN` con el teléfono del negocio en el mensaje.
+el mensaje trae el teléfono del negocio, que es lo que de verdad sirve a esa
+altura.
+
+**Mover no cancela y recrea.** Es la misma cita, con su mismo token y su mismo
+precio: recrearla le cambiaría al cliente el link que ya tiene en su chat.
+Reprogramar no pide código otra vez — el token del link ya prueba de quién es la
+cita— y reusa la pantalla de reserva con `?mover=<token>`.
 
 ---
 

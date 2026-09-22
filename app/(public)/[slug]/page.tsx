@@ -1,4 +1,5 @@
-import { Clock, Image as IconoImagen, MapPin, MessageCircle } from 'lucide-react';
+import { CalendarPlus, ChevronRight, Clock, Image as IconoImagen, MapPin, MessageCircle } from 'lucide-react';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { duracion, iniciales, pesos } from '@/lib/formato';
@@ -14,8 +15,8 @@ import { getNegocioPublico } from '@/lib/tenant';
  * RLS exponen al público — ni clientes, ni citas, ni contabilidad.
  *
  * Es la cara del producto frente al cliente final y se abre casi siempre desde
- * un celular (el link de Instagram). El flujo de reserva completo llega con la
- * épica F; mientras tanto, el botón fijo lleva al WhatsApp del negocio.
+ * un celular (el link de Instagram). De acá se entra a reservar, con un
+ * servicio ya escogido si se tocó uno de la lista.
  */
 
 type Props = { params: Promise<{ slug: string }> };
@@ -115,18 +116,25 @@ export default async function NegocioPage({ params }: Props) {
             ) : (
               <ul className="flex flex-col gap-2.5">
                 {servicios.map((s) => (
-                  <li key={s.id} className="flex items-center gap-3 rounded-[18px] border border-border bg-card px-4 py-3.5">
-                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="text-base font-semibold">{s.name}</span>
-                      <span className="flex items-center gap-1 text-[13px] text-muted-foreground">
-                        <Clock className="size-3.5 shrink-0" />
-                        <span className="truncate">
-                          {duracion(s.duration_minutes)}
-                          {s.description && ` · ${s.description}`}
+                  <li key={s.id}>
+                    {/* Tocar el servicio abre la reserva ya con ese servicio escogido. */}
+                    <Link
+                      href={`/${negocio.slug}/reservar?servicio=${s.id}`}
+                      className="flex items-center gap-3 rounded-[18px] border border-border bg-card px-4 py-3.5 transition hover:border-input"
+                    >
+                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="text-base font-semibold">{s.name}</span>
+                        <span className="flex items-center gap-1 text-[13px] text-muted-foreground">
+                          <Clock className="size-3.5 shrink-0" />
+                          <span className="truncate">
+                            {duracion(s.duration_minutes)}
+                            {s.description && ` · ${s.description}`}
+                          </span>
                         </span>
                       </span>
-                    </span>
-                    <span className="shrink-0 text-base font-bold">{pesos(s.price_cop)}</span>
+                      <span className="shrink-0 text-base font-bold">{pesos(s.price_cop)}</span>
+                      <ChevronRight className="size-5 shrink-0 text-tenue" />
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -160,24 +168,41 @@ export default async function NegocioPage({ params }: Props) {
         </main>
       </div>
 
-      {/* La reserva en línea llega con la épica F. Mientras tanto, WhatsApp. */}
-      {whatsapp && (
+      {/*
+        Reservar es la acción principal en cuanto el negocio tenga servicios.
+        Si todavía no publicó ninguno, queda el WhatsApp para no dejar al
+        cliente sin manera de escribir.
+      */}
+      {(!!servicios?.length || whatsapp) && (
         <div className="fixed inset-x-0 bottom-0 bg-gradient-to-t from-papel from-70% to-transparent px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-          <a
-            href={whatsapp}
-            target="_blank"
-            rel="noreferrer"
-            className="mx-auto flex h-[60px] max-w-xl items-center justify-between rounded-[20px] bg-tinta pr-2 pl-[18px] text-white"
-          >
+          <div className="mx-auto flex h-[60px] max-w-xl items-center justify-between rounded-[20px] bg-tinta pr-2 pl-[18px] text-white">
             <span className="flex flex-col">
               <span className="text-xs text-[#9da29a]">¿Quieres una cita?</span>
-              <span className="text-base font-bold">Escríbenos</span>
+              <span className="text-base font-bold">{negocio.name}</span>
             </span>
-            <span className="flex h-11 items-center gap-2 rounded-[14px] bg-lima px-[18px] text-[15px] font-semibold text-tinta">
-              <MessageCircle className="size-[18px]" />
-              WhatsApp
+            <span className="flex items-center gap-2">
+              {whatsapp && (
+                <a
+                  href={whatsapp}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Escribir por WhatsApp"
+                  className="flex size-11 items-center justify-center rounded-[14px] border border-[#3a3f39] text-white"
+                >
+                  <MessageCircle className="size-[18px]" />
+                </a>
+              )}
+              {!!servicios?.length && (
+                <Link
+                  href={`/${negocio.slug}/reservar`}
+                  className="flex h-11 items-center gap-2 rounded-[14px] bg-lima px-[18px] text-[15px] font-semibold text-tinta"
+                >
+                  <CalendarPlus className="size-[18px]" />
+                  Reservar
+                </Link>
+              )}
             </span>
-          </a>
+          </div>
         </div>
       )}
     </div>

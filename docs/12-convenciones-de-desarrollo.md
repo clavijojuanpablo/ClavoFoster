@@ -128,7 +128,8 @@ maestra.
 
 Se usa solo en tres lugares, y en ninguno más:
 
-1. Crear una cita desde la página pública (el cliente no tiene sesión).
+1. La reserva desde la página pública: calcular los cupos libres y crear la
+   cita (el cliente final no tiene sesión que RLS pueda evaluar).
 2. Procesar webhooks de la pasarela.
 3. Trabajos programados (recordatorios, limpieza de retenciones vencidas).
 
@@ -151,6 +152,8 @@ se devuelve** y hay que justificar por qué.
 /lib
   /supabase                createServerClient, createBrowserClient, createAdminClient
   /scheduling              Motor de cupos. LÓGICA PURA
+  /agenda                  Disposición del calendario. LÓGICA PURA
+  /booking                 La reserva pública: cupos, OTP, crear y gestionar la cita
   /billing                 Interfaz de pagos + adaptadores
   /notifications           Interfaz de mensajería + canales
   /validation              Esquemas de Zod

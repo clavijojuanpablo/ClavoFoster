@@ -29,7 +29,7 @@ export type ItemMenu = {
 
 export const MENU_OPERACION: ItemMenu[] = [
   { etiqueta: 'Inicio', href: '/panel', icono: House, disponible: true, soloDueno: false },
-  { etiqueta: 'Agenda', href: '/panel/agenda', icono: CalendarDays, disponible: false, soloDueno: false }, // G1
+  { etiqueta: 'Agenda', href: '/panel/agenda', icono: CalendarDays, disponible: true, soloDueno: false },
   { etiqueta: 'Clientes', href: '/panel/clientes', icono: Users, disponible: false, soloDueno: true },
 ];
 
